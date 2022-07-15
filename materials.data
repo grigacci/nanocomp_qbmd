@@ -1,0 +1,37 @@
+# This file contains the data to create a structure using two materials. Their properties must be 
+# defined here.
+# '#' defines a comment.
+
+######################################____Example____##############################################
+# Title, shown in the materials list presented on the "New Simulation" window.
+[InAlAs-InGaAs]
+# Lattice parameter (in angstrons = 1E-10m)
+latpar = 5.8687E-10
+  
+# Properties of the barrier material
+# Name, appears on the structure table under the "Material" column -> String
+barrier: InAlAs
+# Effective mass, constant: m_eff_ct * electron_mass -> Float in scientific 
+m_eff_ct_barrier: 7.61544325168e-32
+# Electronic potential of the barrier -> Float
+pot_barrier: 0.503
+# Non-parabolicity of the barrier -> Float in scientific 
+e_nonparab_barrier: 2.065014390417958e-19
+
+# Properties of the well material
+well: InGaAs
+m_eff_ct_well: 3.97169049968e-32
+pot_well: 0.0
+e_nonparab_well: 1.0769692275385522e-19
+###################################################################################################
+
+[MaterialA-MaterialB]
+latpar = 6.1234E-10
+barrier: MaterialA
+m_eff_ct_barrier: 6.376567316000001e-32
+pot_barrier: 0.4
+e_nonparab_barrier: 1.065014390417958e-19
+well: MaterialB
+m_eff_ct_well: 3.6437527520000004e-32
+pot_well: 0.0
+e_nonparab_well: 1.2769692275385522e-19
