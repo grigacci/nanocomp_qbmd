@@ -34,15 +34,15 @@ Authors
 
 References and Related Literature
 ===
-Peer-Reviewed Articles
-[Quantum Well Infrared Photodetector for the SWIR Range](https://doi.org/10.1007/978-981-13-9155-2_29)
-[Electronic Confinement in the Continuum: Leaky Bragg Mirror for Electrons](https://doi.org/10.29292/jics.v15i1.109)
-[Progress in Symmetric and Asymmetric Superlattice Quantum Well Infrared Photodetectors](https://doi.org/10.1002/andp.201800462)  
-[Detecting Infrared Radiation Beyond the Bandoffset With Intersubband Transitions](https://doi.org/10.1109/LPT.2016.2554064)
-[Leaky electronic states for photovoltaic photodetectors based on asymmetric superlattices](https://doi.org/10.1063/1.5006464)
-[Exploring Parity Anomaly for Dual Peak Infrared Photodetection](https://doi.org/10.1109/JQE.2016.2623271)
+Peer-Reviewed Articles  
+ - [Quantum Well Infrared Photodetector for the SWIR Range](https://doi.org/10.1007/978-981-13-9155-2_29)
+ - [Electronic Confinement in the Continuum: Leaky Bragg Mirror for Electrons](https://doi.org/10.29292/jics.v15i1.109)
+ - [Progress in Symmetric and Asymmetric Superlattice Quantum Well Infrared Photodetectors](https://doi.org/10.1002/andp.201800462)  
+ - [Detecting Infrared Radiation Beyond the Bandoffset With Intersubband Transitions](https://doi.org/10.1109/LPT.2016.2554064)
+ - [Leaky electronic states for photovoltaic photodetectors based on asymmetric superlattices](https://doi.org/10.1063/1.5006464)
+ - [Exploring Parity Anomaly for Dual Peak Infrared Photodetection](https://doi.org/10.1109/JQE.2016.2623271)
 
-Thesis
+Thesis  
 Tese Germano  
 Tese Pedro  
 Tese Rogério  
