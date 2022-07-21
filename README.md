@@ -10,10 +10,10 @@ Authors
 
 References and Related Literature
 ===
-Tese Germano
-Tese Pedro
-Tese Rogério
-Tese Lesslie
+Tese Germano  
+Tese Pedro  
+Tese Rogério  
+Tese Lesslie  
 
 Examples
 ---
