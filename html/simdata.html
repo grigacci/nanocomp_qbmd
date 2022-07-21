@@ -1,0 +1,1848 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>simdata API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>simdata</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import numpy as np
+import simcore, os
+from scipy.optimize import newton
+import matplotlib.pyplot as plt
+
+NM = 1.0E-9
+
+class SimData:
+    &#34;&#34;&#34;
+    This class stores the data regarding one structure
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        title,
+        array_data,
+        material_data={
+            &#34;latpar&#34;: 5.8687e-10,
+            &#34;barrier&#34;: &#34;InAlAs&#34;,
+            &#34;m_eff_ct_barrier&#34;: 7.61544325168e-32,
+            &#34;e_nonparab_barrier&#34;: 2.065014390417958e-19,
+            &#34;pot_barrier&#34;: 0.503,
+            &#34;well&#34;: &#34;InGaAs&#34;,
+            &#34;m_eff_ct_well&#34;: 3.97169049968e-32,
+            &#34;pot_well&#34;: 0.0,
+            &#34;e_nonparab_well&#34;: 1.0769692275385522e-19,
+        },
+    ):
+        &#34;&#34;&#34;
+        Creates a new simulation.
+        &#34;&#34;&#34;
+        self.title = title
+        # Arrays used in the calculation
+        self.array_data = array_data
+        self.estrutura = array_data[&#34;estrutura&#34;]
+        self.material = []
+        self.feature = []
+        self.massa_eff_const = array_data[&#34;massa_eff_const&#34;]
+        self.pot = array_data[&#34;pot&#34;]
+        self.E_nonparab = array_data[&#34;E_nonparab&#34;]
+        self.e_field = 0.0  # in KV/cm
+        # self.x0 = 0.0  # Set to position 0
+        # Defining material properties
+        self.material_data = material_data
+        self.latpar = material_data[&#34;latpar&#34;]
+        self.barrier = material_data[&#34;barrier&#34;]
+        self.m_eff_ct_barrier = material_data[&#34;m_eff_ct_barrier&#34;]
+        self.e_nonparab_barrier = material_data[&#34;e_nonparab_barrier&#34;]
+        self.pot_barrier = material_data[&#34;pot_barrier&#34;]
+        self.well = material_data[&#34;well&#34;]
+        self.m_eff_ct_well = material_data[&#34;m_eff_ct_well&#34;]
+        self.pot_well = material_data[&#34;pot_well&#34;]
+        self.e_nonparab_well = material_data[&#34;e_nonparab_well&#34;]
+
+        # Since it was just created, the simulation and absorption were not run
+        self.sim_ran = False
+        self.abs_ran = False
+        self.tra_ran = False
+        self.pc_ran = False
+
+    def AddWell(self, thickness):
+        &#34;&#34;&#34;
+        Adds a well with the desired thickness to the end of the structure.
+        &#34;&#34;&#34;
+        self.estrutura = np.append(self.estrutura, thickness * NM)
+        self.material.append(self.well)
+        self.feature.append(&#34;Well&#34;)
+        self.massa_eff_const = np.append(self.massa_eff_const, self.m_eff_ct_well)
+        self.pot = np.append(self.pot, self.pot_well)
+        self.E_nonparab = np.append(self.E_nonparab, self.e_nonparab_well)
+
+    def AddBarrier(self, thickness):
+        &#34;&#34;&#34;
+        Adds a barrier with the desired thickness to the end of the structure.
+        &#34;&#34;&#34;
+        self.estrutura = np.append(self.estrutura, thickness * NM)
+        self.material.append(self.barrier)
+        self.feature.append(&#34;Barrier&#34;)
+        self.massa_eff_const = np.append(self.massa_eff_const, self.m_eff_ct_barrier)
+        self.pot = np.append(self.pot, self.pot_barrier)
+        self.E_nonparab = np.append(self.E_nonparab, self.e_nonparab_barrier)
+
+    def ReplaceWell(self, thickness, index):
+        &#34;&#34;&#34;
+        Replaces the selected layer by a quantum well with the desired thickness.
+        &#34;&#34;&#34;
+        self.estrutura[index] = thickness * NM
+        self.material[index] = self.well
+        self.feature[index] = &#34;Well&#34;
+        self.massa_eff_const[index] = self.m_eff_ct_well
+        self.pot[index] = self.pot_well
+        self.E_nonparab[index] = self.e_nonparab_well
+
+    def ReplaceBarrier(self, thickness, index):
+        &#34;&#34;&#34;
+        Replaces the selected layer by a quantum barrier with the desired thickness.
+        &#34;&#34;&#34;
+        self.estrutura[index] = thickness * NM
+        self.material[index] = self.barrier
+        self.feature[index] = &#34;Barrier&#34;
+        self.massa_eff_const[index] = self.m_eff_ct_barrier
+        self.pot[index] = self.pot_barrier
+        self.E_nonparab[index] = self.e_nonparab_barrier
+
+    def InsertWell(self, thickness, index):
+        &#34;&#34;&#34;
+        Inserts a quantum well with the desired thickness, after the selected layer.
+        &#34;&#34;&#34;
+        self.estrutura = np.insert(self.estrutura, [index + 1], thickness * NM)
+        self.material.insert(index + 1, self.well)
+        self.feature.insert(index + 1, &#34;Well&#34;)
+        self.massa_eff_const = np.insert(
+            self.massa_eff_const, [index + 1], self.m_eff_ct_well
+        )
+        self.pot = np.insert(self.pot, [index + 1], self.pot_well)
+        self.E_nonparab = np.insert(self.E_nonparab, [index + 1], self.e_nonparab_well)
+
+    def InsertBarrier(self, thickness, index):
+        &#34;&#34;&#34;
+        Inserts a quantum barrier with the desired thickness, after the selected layer.
+        &#34;&#34;&#34;
+        self.estrutura = np.insert(self.estrutura, [index + 1], thickness * NM)
+        self.material.insert(index + 1, self.barrier)
+        self.feature.insert(index + 1, &#34;Barrier&#34;)
+        self.massa_eff_const = np.insert(
+            self.massa_eff_const, [index + 1], self.m_eff_ct_barrier
+        )
+        self.pot = np.insert(self.pot, [index + 1], self.pot_barrier)
+        self.E_nonparab = np.insert(
+            self.E_nonparab, [index + 1], self.e_nonparab_barrier
+        )
+
+    def RemoveSelected(self, index):
+        &#34;&#34;&#34;
+        Removes the selected layer.
+        &#34;&#34;&#34;
+        self.estrutura = np.delete(self.estrutura, index)
+        self.massa_eff_const = np.delete(self.massa_eff_const, index)
+        self.pot = np.delete(self.pot, index)
+        self.E_nonparab = np.delete(self.E_nonparab, index)
+        self.material.pop(index)
+        self.feature.pop(index)
+
+    def RemoveAll(self):
+        &#34;&#34;&#34;
+        Clears the structure.
+        &#34;&#34;&#34;
+        self.estrutura = np.array([], dtype=np.float64)
+        self.massa_eff_const = np.array([], dtype=np.float64)
+        self.pot = np.array([], dtype=np.float64)
+        self.E_nonparab = np.array([], dtype=np.float64)
+        self.material = []
+        self.feature = []
+
+    def check_values(self, barrier_higher=True):
+        self.results = []
+        if barrier_higher:
+            for i in range(len(self.OscStrength)):
+                if self.Autoenergias[i + 1] &gt; self.pot_barrier:
+                    self.results.append(
+                        [
+                            self.Autoenergias[i + 1] - self.Autoenergias[0],
+                            self.OscStrength[i],
+                            [self.Autoenergias[i + 1], self.Autoenergias[0]],
+                            i + 1,
+                        ]
+                    )
+        else:
+            for i in range(len(self.OscStrength)):
+                self.results.append(
+                    [
+                        self.Autoenergias[i + 1] - self.Autoenergias[0],
+                        self.OscStrength[i],
+                        [self.Autoenergias[i + 1], self.Autoenergias[0]],
+                        i + 1,
+                    ]
+                )
+
+    def SaveStructure_best_osc(self, path_file=&#34;test.png&#34;, info=&#34;x&#34;, plot_width=80):
+        self.x_graf = np.array([0])
+        self.v_graf = np.array([self.pot[0]])
+
+        # Going through the layers and creating the arrays iteratively
+        for i, en in enumerate(self.pot):
+            if (
+                en == self.v_graf[-1]
+            ):  # If this layer has the same energy as the previous one
+                self.x_graf = np.append(
+                    self.x_graf, [self.x_graf[-1] + self.estrutura[i]]
+                )
+                self.v_graf = np.append(self.v_graf, [en])
+            else:
+                self.x_graf = np.append(
+                    self.x_graf, [self.x_graf[-1], self.x_graf[-1] + self.estrutura[i]]
+                )
+                self.v_graf = np.append(self.v_graf, [en, en])
+
+        # Changing x and y to [nm] and [meV]
+        self.x_graf = 1.0e9 * self.x_graf
+        self.v_graf = 1.0e3 * self.v_graf
+
+        # Centering the structure around 0
+        self.x_graf = self.x_graf - (np.max(self.x_graf) - np.min(self.x_graf)) / 2.0
+
+        # fig, axs = plt.subplots(2)
+        # fig.suptitle(&#39;Vertically stacked subplots&#39;)
+        # # plt.clf()
+        # plt.xlabel(&#39;Length (nm)&#39;)
+        # plt.ylabel(&#39;Energy (meV)&#39;)
+        # plt.xlim([0, 80])
+        # plt.ylim([-50, 700])
+        # axs[0].plot(self.x_graf, self.v_graf) # x in [nm] and y in [meV]
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, gridspec_kw={&#34;width_ratios&#34;: [3, 1]})
+        # fig, (ax1, ax2) = plt.subplots(2,1)
+        # fig, axs = plt.subplots(2,1,figsize=(16,9), gridspec_kw={&#39;height_ratios&#39;: [1, 2]})
+
+        fig.suptitle(info)
+
+        ax1.plot(self.x_graf, self.v_graf)
+        ax1.set(xlabel=&#34;Length (nm)&#34;, ylabel=&#34;Energy (meV)&#34;)
+        ax1.set(xlim=[-plot_width / 2, plot_width / 2], ylim=[-50, 900])
+
+        # print(len(self.ResultadoWF))
+        # print(self.best_index)
+        # grafica as funções de onda
+
+        # for num, result in enumerate(self.ResultadoWF, start=0):
+        #     if num == 0:
+        #         ax1.plot(result[0, :] * 1.0E9, result[3, :] * 1.0E3, color=&#39;green&#39;)
+        #     elif num == self.best_index:
+        #         ax1.plot(result[0, :] * 1.0E9, result[3, :] * 1.0E3, color=&#39;red&#39;)
+        #     else:
+        #         ax1.plot(result[0, :] * 1.0E9, result[3, :] * 1.0E3, color=&#39;#cccccc&#39;)
+
+        # ax1.plot(self.ResultadoWF[0][0, :] * 1.0E9, self.ResultadoWF[0][3, :] * 1.0E3, color=&#39;green&#39;)
+        # ax1.plot(self.ResultadoWF[self.best_index][0, :] * 1.0E9, self.ResultadoWF[self.best_index][3, :] * 1.0E3, color=&#39;red&#39;)
+        osc_max = 0
+        for res in self.results:
+            if res[1] &gt; osc_max:
+                osc_max = res[1]
+
+        for num, result in enumerate(self.ResultadoWF, start=1):
+            ax1.plot(result[0, :] * 1.0e9, result[3, :] * 1.0e3, color=&#34;#cccccc&#34;)
+
+        # print(&#34;self.ResultadoWF: &#34;, len(self.ResultadoWF))
+        # print(&#34;self.results: &#34;, len(self.results))
+
+        for jj in range(len(self.results)):
+            if self.results[jj][1] / osc_max &gt; 0.8:
+
+                red_index = jj + 1
+                ax1.plot(
+                    self.ResultadoWF[red_index][0, :] * 1.0e9,
+                    self.ResultadoWF[red_index][3, :] * 1.0e3,
+                    color=&#34;red&#34;,
+                )
+
+        # ax1.plot(self.ResultadoWF[0][0, :] * 1.0E9, self.ResultadoWF[0][3, :] * 1.0E3, color=&#39;green&#39;)
+        # ax1.plot(self.ResultadoWF[self.best_index][0, :] * 1.0E9, self.ResultadoWF[self.best_index][3, :] * 1.0E3, color=&#39;red&#39;)
+
+        ax1.plot(
+            self.ResultadoWF[0][0, :] * 1.0e9,
+            self.ResultadoWF[0][3, :] * 1.0e3,
+            color=&#34;green&#34;,
+        )
+
+        x2 = []
+        for jj in range(len(self.abs_result)):
+            x2.append(jj + 1)
+
+        for res in self.results:
+            # plt.plot(x, y, &#39;o&#39;)
+            ax2.plot(res[1], res[0] * 1000, &#34;.&#34;, color=&#34;blue&#34;)
+            # print(res[1], res[0]*1000)
+        # desenha linha na absorção na energia com Osc maior
+        # ax2.axvline(x=(self.Autoenergias[self.best_index]-self.Autoenergias[0])*1000)
+
+        # print(self.Autoenergias[self.best_index]-self.Autoenergias[0])
+
+        # for energia in self.results:
+        #     print(energia)
+        #     if energia[1]&gt;0.9:
+        #         # ax2.plot([energia[0]*1000], [1], &#39;ro&#39;)
+        #         ax2.axvline(x=energia[0]*1000)
+
+        # plt.yscale(&#39;log&#39;)
+        # ax2.set(xlim=[0, 1000], ylim=[0.000001, 2])
+
+        # plt.yscale(&#39;log&#39;)
+        # plt.xscale(&#39;log&#39;)
+
+        E0 = self.Autoenergias[0] * 1000
+        # print(E0)
+        # ax2.set(xlim=[0.00001, 1.2], ylim=[-E0-50, 950-E0-50])
+        # ax2.set(xlim=[-0.1, 1.1], ylim=[-E0-50, 950-E0-50])
+        ax2.set(ylim=[-E0 - 50, 950 - E0 - 50])
+        # ax2.set(ylim=[-E0-50, 950-E0-50])
+        # ax2.set(xlim=[0, 1000], ylim=[0, 1])
+        # ax2.set(xlabel=&#39;Energy (meV)&#39;, ylabel=&#39;Absorption (u.a.)&#39;)
+        ax2.set(xlabel=&#34;OscStrength (u.a.), max: &#34; + &#34;{:.2f}&#34;.format(osc_max))
+
+        folder_path = os.path.dirname(os.path.abspath(path_file))
+        os.makedirs(folder_path, exist_ok=True)
+        plt.savefig(path_file, dpi=150)
+
+    def RunSim(self, method, split_i, E0, Ef, dE, dx, dx_unit, central_layer):
+        &#34;&#34;&#34;
+        Main function that performs the simulation
+        &#34;&#34;&#34;
+        # Correcting the unit of dx based on the unit chosen from the interface and the 
+        # lattice parameter
+        if dx_unit == &#34;nm&#34;:
+            dx = dx * NM  # Conversion from nm to m
+        elif dx_unit == &#34;ml&#34;:
+            dx = dx * self.latpar / 2.0  # Conversion from ml to m
+        else:
+            dx = 1.0e-11
+            print(&#34;dx_unit was defined incorrectly; possible options: nm or ml&#34;)
+
+        # Creating the energy array
+        VecEnergy = np.arange(E0, Ef + dE, dE)
+        VecEnLen = len(VecEnergy)
+
+        # Creating the x-axis array - the x-axis 0 is always centered in the target 
+        # layer
+        layers = len(self.estrutura)
+        if central_layer &lt;= 0:
+            x0 = 0.0
+        else:
+            # In case the number of the layer exceeds the limit
+            if (
+                central_layer &gt; layers
+            ):  
+                central_layer = layers
+            # Thickness of target layers
+            x0 = -np.sum(self.estrutura[0:central_layer] )  
+        x_first_step = x0 + dx
+
+        # Divides the length of each layer by dx to get the number of steps in each 
+        # layer
+        # Must round and convert to int so that it can be used as a array length
+        steps_per_layer = np.around(np.abs(self.estrutura) / dx, decimals=0).astype(
+            &#34;int&#34;
+        )
+
+        # Dimension of the arrays used to calculate each step of the structure. It&#39;s 
+        # size is the number of layers plus the thickness of the layers divided by dx 
+        # and rounded.
+        length_arrays = layers + np.sum(steps_per_layer)
+        # Pre-allocating
+        x = np.zeros((length_arrays), dtype=np.float64)
+        pot = np.zeros((length_arrays), dtype=np.float64)
+        effm_cte = np.zeros((length_arrays), dtype=np.float64)
+
+        # Well Non-Parabolicity from Leavitt
+        # Nonparabw = 1.3E-18
+        # eq. 7 (PRBvol 35, number 14, pg 7770, Nelson D.F. et all,  
+        # doi.org/10.1103/PhysRevB.35.7770)
+        npe = np.zeros((length_arrays), dtype=np.float64)
+
+        pos = 0
+
+        # Going through every layer
+        for layer in range(layers):
+            x[pos] = x_first_step - dx
+            pot[pos] = self.pot[layer] - self.e_field * 1e5 * (x_first_step - dx)
+            effm_cte[pos] = self.massa_eff_const[layer]
+            npe[pos] = self.E_nonparab[layer]
+
+            pos += 1
+
+            # Going through the steps of each layer
+            for step in range(steps_per_layer[layer]):
+                x[pos] = x_first_step
+                pot[pos] = self.pot[layer] - self.e_field * 1e5 * x_first_step
+                effm_cte[pos] = self.massa_eff_const[layer]
+                npe[pos] = self.E_nonparab[layer]
+
+                # Manually taking into account the dimensions of the steps
+                x_first_step += dx
+                pos += 1
+
+        # Calculating the Transfer Matrix
+        # A transfer matrix (2,2) is calculated for each energy.
+        self.TM = np.zeros((VecEnLen, 2, 2), dtype=np.complex128)
+        self.k_ratio = np.zeros((VecEnLen), dtype=np.complex128)
+        self.TMB = np.zeros((VecEnLen, 2, 2), dtype=np.complex128)
+
+        # TODO Paralelizar o cálculo da matriz de transferência
+        for i, energy in enumerate(VecEnergy):
+            # Método rapido para identificar os auto estados (shooting)
+            # VecResultado[i] = simcore.Shooting(energy, effm_cte, pot, npe, dx)
+            # Método da matriz de transferência
+            # VecResultado[i] = simcore.T_1_1Re(1000*energy, x, effm_cte, pot, npe,
+            #                                   self.m_eff_ct_barrier)
+            self.TM[i], self.k_ratio[i], self.TMB[i] = simcore.TransferMatrix(
+                energy, x, effm_cte, pot, npe, self.m_eff_ct_barrier
+            )
+            # TODO ver ser é mais rápido rodar com Numerov
+            #  VecResultado[i] = simcore.Numerov(energy, effm_cte, pot, npe, dx)
+
+        T_11 = np.real(self.TM[:, 1, 1])
+
+        # The eigen energies are found when TM_array(1, 1) crosses zero
+        # finding eigenenergies from the real part of transmission and calculating
+        # wavefunctions
+        signs = np.sign((T_11))
+        # replace zeros with -1 (if there is 0 on the original array, np.sign returns 0)
+        signs[signs == 0] = -1
+
+        # Bound states are found at the zero-crossings
+        # Just crossing zero doesn&#39;t necessarily means it&#39;s a bound state, the second 
+        # derivative must also be negative (aka, a peak)
+        # Ref.: Elementary Quantum Mechanics in One Dimension Pg. 92
+        bound_states_indexes = np.where(np.diff(signs))[0]
+        bound_states_number = len(bound_states_indexes)
+
+        # Length of the energy array where the solution of T11 is real.
+        bound_states = np.zeros(bound_states_number, dtype=np.float64)
+
+        # The calculated wave functions are represented in (4,len(x)) arrays, one for 
+        # each bound state
+        wave_functions = np.zeros((bound_states_number, 4, length_arrays))
+
+        # If the chosen method requires a structure split, we need to calculate the 
+        # split index.
+        # The interface index must be between 1 and (layers-1). If the interface is set 
+        # at 0 or if it&#39;s equal to the number of layers,  the split method doesn&#39;t work.
+        # If interface is 0 or &#34;layers&#34;, then a non-split method should be used
+        interface = split_i
+        if interface &lt;= 0:
+            interface = 1
+        elif interface &gt;= layers:
+            interface = layers - 1
+        # The index of the split interface enables the calculation of the number of 
+        # points to the right and the left. &#34;split&#34; is the length of the left side and 
+        # the index of the first item of the right side
+        split = interface + np.sum(steps_per_layer[0:interface])
+
+        # Helper function created to run the newton method on Re(T(1,1))
+        def TM_Re11(inputE, x, effm_cte, pot, npe, m_eff_ct_barrier):
+            _, _, TMB = simcore.TransferMatrix(
+                inputE, x, effm_cte, pot, npe, m_eff_ct_barrier
+            )
+            return np.real(TMB[1, 1])
+
+        for i, crossing in enumerate(bound_states_indexes):
+            try:
+                x0 = VecEnergy[crossing]
+                # TODO Acertar tol e rtol
+                bound_states[i] = newton(
+                    TM_Re11,
+                    VecEnergy[crossing],
+                    fprime=None,
+                    args=(x, effm_cte, pot, npe, self.m_eff_ct_barrier),
+                    tol=1.0e-16,
+                    rtol=1.0e-16,
+                )
+
+            except RuntimeError:
+                print(&#34;Ignorando o erro de runtime. Energia = %f&#34; % VecEnergy[crossing])
+
+            # TODO Checar se isso ainda é necessário. Era usado com o método Shooting
+            # if WF_EnergyRe[i] &lt; 0:
+            #     print(f&#34;Invalid energy, negative: {WF_EnergyRe[i]:.3f} eV&#34;)
+            # if WF_EnergyRe[i] &gt; Ef:
+            #     print(f&#34;Invalid energy, larger than maximum: {WF_EnergyRe[i]:.3f} eV&#34;)
+
+            # Needs to invert the right side signal for odd states
+            odd = True if i % 2 &gt; 0 else False
+            if method == 0:  # Numerov - For
+                wave_functions[i] = simcore.Numerov(bound_states[i], x, effm_cte, pot)
+
+            elif method == 1:  # Numerov - Split
+                wave_functions[i] = simcore.NumerovSplit(
+                    bound_states[i], x, effm_cte, pot, odd, split_i
+                )
+            elif method == 2:  # Numerov - Arrays
+                wave_functions[i] = simcore.NumerovInArrays(
+                    bound_states[i], x, effm_cte, pot, odd, split_i
+                )
+            elif method == 3:  # TMM
+                wave_functions[i] = simcore.Funcao_de_Onda(
+                    bound_states[i], x, effm_cte, pot, npe
+                )
+
+            elif method == 4:  # TMM - Split
+                wave_functions[i] = simcore.Funcao_de_Onda_split(
+                    bound_states[i], x, effm_cte, pot, npe, odd, split
+                )
+
+        # Output arrays are stored
+        # TODO Simplify this, use &#34;self&#34; before and change name of the ones in portuguese
+        self.sim_x = x
+        self.sim_pot = pot
+        self.sim_effm_cte = effm_cte
+        self.sim_npe = npe
+        # self.sim_VecResultado = VecResultado
+        # self.sim_VecResultado = T_11
+        self.sim_VecEnergy = VecEnergy
+        # self.sim_ResultadoWF = self.ResultadoWF = ResultadoWF
+        self.sim_ResultadoWF = self.ResultadoWF = wave_functions
+        # self.sim_Energias = self.Autoenergias = WF_EnergyRe
+        self.sim_Energias = self.Autoenergias = bound_states
+
+        # This works as a signal to allow the absorption to run
+        self.sim_ran = True
+
+    def CalcAbs(self, wf_0_index, E0, Ef, dE, broadening):
+        abs = simcore.Absorption(
+            self.sim_Energias, self.sim_ResultadoWF, wf_0_index, E0, Ef, dE, broadening
+        )
+
+        self.abs_energy_axis = abs[0]
+        self.abs_result = abs[1]
+        self.abs_delta_E = abs[2]
+        self.abs_dipole = abs[3]
+        self.abs_osc_strength = self.OscStrength = abs[4]
+
+        self.abs_ran = True
+
+    def Transmission(self):
+        &#34;&#34;&#34;
+        Calculates the transmission for a given range of energies. The simulation must
+        have been run before.
+        &#34;&#34;&#34;
+        if not self.sim_ran:
+            print(&#34;The simulation must be run before calculating the transmission&#34;)
+            return
+
+        try:
+            TM_11 = self.TM[:, 1, 1]
+            self.sim_Transmission = np.real(1 / (np.absolute(TM_11))) * self.k_ratio
+            self.tra_ran = True
+        except:
+            print(&#34;Could not calculate transmission, run the simulation first&#34;)
+
+    def RunPhotocurrent(self, dx, E0, Ef, dE):
+        &#34;&#34;&#34;
+        Calculates the photocurrent for a given range of energies. The simulation must
+        have been run before.
+        &#34;&#34;&#34;
+        if not self.sim_ran:
+            print(&#34;The simulation must be run before calculating the transmission&#34;)
+            return
+        # print(f&#34;dx no Photocurrent = {dx:.15f}&#34;)
+        # Creating the energy array
+        energies = np.arange(E0, Ef + dE, dE)
+        pc = simcore.Photocurrent(
+            energies=energies,
+            x=self.sim_x,
+            pot=self.sim_pot,
+            effm_cte=self.sim_effm_cte,
+            npe=self.sim_npe,
+            psi=self.sim_ResultadoWF[0],
+            E0=self.sim_Energias[0],
+        )
+        self.sim_Photocurrent = energies, pc</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="simdata.SimData"><code class="flex name class">
+<span>class <span class="ident">SimData</span></span>
+<span>(</span><span>title, array_data, material_data={'latpar': 5.8687e-10, 'barrier': 'InAlAs', 'm_eff_ct_barrier': 7.61544325168e-32, 'e_nonparab_barrier': 2.065014390417958e-19, 'pot_barrier': 0.503, 'well': 'InGaAs', 'm_eff_ct_well': 3.97169049968e-32, 'pot_well': 0.0, 'e_nonparab_well': 1.0769692275385522e-19})</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This class stores the data regarding one structure</p>
+<p>Creates a new simulation.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SimData:
+    &#34;&#34;&#34;
+    This class stores the data regarding one structure
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        title,
+        array_data,
+        material_data={
+            &#34;latpar&#34;: 5.8687e-10,
+            &#34;barrier&#34;: &#34;InAlAs&#34;,
+            &#34;m_eff_ct_barrier&#34;: 7.61544325168e-32,
+            &#34;e_nonparab_barrier&#34;: 2.065014390417958e-19,
+            &#34;pot_barrier&#34;: 0.503,
+            &#34;well&#34;: &#34;InGaAs&#34;,
+            &#34;m_eff_ct_well&#34;: 3.97169049968e-32,
+            &#34;pot_well&#34;: 0.0,
+            &#34;e_nonparab_well&#34;: 1.0769692275385522e-19,
+        },
+    ):
+        &#34;&#34;&#34;
+        Creates a new simulation.
+        &#34;&#34;&#34;
+        self.title = title
+        # Arrays used in the calculation
+        self.array_data = array_data
+        self.estrutura = array_data[&#34;estrutura&#34;]
+        self.material = []
+        self.feature = []
+        self.massa_eff_const = array_data[&#34;massa_eff_const&#34;]
+        self.pot = array_data[&#34;pot&#34;]
+        self.E_nonparab = array_data[&#34;E_nonparab&#34;]
+        self.e_field = 0.0  # in KV/cm
+        # self.x0 = 0.0  # Set to position 0
+        # Defining material properties
+        self.material_data = material_data
+        self.latpar = material_data[&#34;latpar&#34;]
+        self.barrier = material_data[&#34;barrier&#34;]
+        self.m_eff_ct_barrier = material_data[&#34;m_eff_ct_barrier&#34;]
+        self.e_nonparab_barrier = material_data[&#34;e_nonparab_barrier&#34;]
+        self.pot_barrier = material_data[&#34;pot_barrier&#34;]
+        self.well = material_data[&#34;well&#34;]
+        self.m_eff_ct_well = material_data[&#34;m_eff_ct_well&#34;]
+        self.pot_well = material_data[&#34;pot_well&#34;]
+        self.e_nonparab_well = material_data[&#34;e_nonparab_well&#34;]
+
+        # Since it was just created, the simulation and absorption were not run
+        self.sim_ran = False
+        self.abs_ran = False
+        self.tra_ran = False
+        self.pc_ran = False
+
+    def AddWell(self, thickness):
+        &#34;&#34;&#34;
+        Adds a well with the desired thickness to the end of the structure.
+        &#34;&#34;&#34;
+        self.estrutura = np.append(self.estrutura, thickness * NM)
+        self.material.append(self.well)
+        self.feature.append(&#34;Well&#34;)
+        self.massa_eff_const = np.append(self.massa_eff_const, self.m_eff_ct_well)
+        self.pot = np.append(self.pot, self.pot_well)
+        self.E_nonparab = np.append(self.E_nonparab, self.e_nonparab_well)
+
+    def AddBarrier(self, thickness):
+        &#34;&#34;&#34;
+        Adds a barrier with the desired thickness to the end of the structure.
+        &#34;&#34;&#34;
+        self.estrutura = np.append(self.estrutura, thickness * NM)
+        self.material.append(self.barrier)
+        self.feature.append(&#34;Barrier&#34;)
+        self.massa_eff_const = np.append(self.massa_eff_const, self.m_eff_ct_barrier)
+        self.pot = np.append(self.pot, self.pot_barrier)
+        self.E_nonparab = np.append(self.E_nonparab, self.e_nonparab_barrier)
+
+    def ReplaceWell(self, thickness, index):
+        &#34;&#34;&#34;
+        Replaces the selected layer by a quantum well with the desired thickness.
+        &#34;&#34;&#34;
+        self.estrutura[index] = thickness * NM
+        self.material[index] = self.well
+        self.feature[index] = &#34;Well&#34;
+        self.massa_eff_const[index] = self.m_eff_ct_well
+        self.pot[index] = self.pot_well
+        self.E_nonparab[index] = self.e_nonparab_well
+
+    def ReplaceBarrier(self, thickness, index):
+        &#34;&#34;&#34;
+        Replaces the selected layer by a quantum barrier with the desired thickness.
+        &#34;&#34;&#34;
+        self.estrutura[index] = thickness * NM
+        self.material[index] = self.barrier
+        self.feature[index] = &#34;Barrier&#34;
+        self.massa_eff_const[index] = self.m_eff_ct_barrier
+        self.pot[index] = self.pot_barrier
+        self.E_nonparab[index] = self.e_nonparab_barrier
+
+    def InsertWell(self, thickness, index):
+        &#34;&#34;&#34;
+        Inserts a quantum well with the desired thickness, after the selected layer.
+        &#34;&#34;&#34;
+        self.estrutura = np.insert(self.estrutura, [index + 1], thickness * NM)
+        self.material.insert(index + 1, self.well)
+        self.feature.insert(index + 1, &#34;Well&#34;)
+        self.massa_eff_const = np.insert(
+            self.massa_eff_const, [index + 1], self.m_eff_ct_well
+        )
+        self.pot = np.insert(self.pot, [index + 1], self.pot_well)
+        self.E_nonparab = np.insert(self.E_nonparab, [index + 1], self.e_nonparab_well)
+
+    def InsertBarrier(self, thickness, index):
+        &#34;&#34;&#34;
+        Inserts a quantum barrier with the desired thickness, after the selected layer.
+        &#34;&#34;&#34;
+        self.estrutura = np.insert(self.estrutura, [index + 1], thickness * NM)
+        self.material.insert(index + 1, self.barrier)
+        self.feature.insert(index + 1, &#34;Barrier&#34;)
+        self.massa_eff_const = np.insert(
+            self.massa_eff_const, [index + 1], self.m_eff_ct_barrier
+        )
+        self.pot = np.insert(self.pot, [index + 1], self.pot_barrier)
+        self.E_nonparab = np.insert(
+            self.E_nonparab, [index + 1], self.e_nonparab_barrier
+        )
+
+    def RemoveSelected(self, index):
+        &#34;&#34;&#34;
+        Removes the selected layer.
+        &#34;&#34;&#34;
+        self.estrutura = np.delete(self.estrutura, index)
+        self.massa_eff_const = np.delete(self.massa_eff_const, index)
+        self.pot = np.delete(self.pot, index)
+        self.E_nonparab = np.delete(self.E_nonparab, index)
+        self.material.pop(index)
+        self.feature.pop(index)
+
+    def RemoveAll(self):
+        &#34;&#34;&#34;
+        Clears the structure.
+        &#34;&#34;&#34;
+        self.estrutura = np.array([], dtype=np.float64)
+        self.massa_eff_const = np.array([], dtype=np.float64)
+        self.pot = np.array([], dtype=np.float64)
+        self.E_nonparab = np.array([], dtype=np.float64)
+        self.material = []
+        self.feature = []
+
+    def check_values(self, barrier_higher=True):
+        self.results = []
+        if barrier_higher:
+            for i in range(len(self.OscStrength)):
+                if self.Autoenergias[i + 1] &gt; self.pot_barrier:
+                    self.results.append(
+                        [
+                            self.Autoenergias[i + 1] - self.Autoenergias[0],
+                            self.OscStrength[i],
+                            [self.Autoenergias[i + 1], self.Autoenergias[0]],
+                            i + 1,
+                        ]
+                    )
+        else:
+            for i in range(len(self.OscStrength)):
+                self.results.append(
+                    [
+                        self.Autoenergias[i + 1] - self.Autoenergias[0],
+                        self.OscStrength[i],
+                        [self.Autoenergias[i + 1], self.Autoenergias[0]],
+                        i + 1,
+                    ]
+                )
+
+    def SaveStructure_best_osc(self, path_file=&#34;test.png&#34;, info=&#34;x&#34;, plot_width=80):
+        self.x_graf = np.array([0])
+        self.v_graf = np.array([self.pot[0]])
+
+        # Going through the layers and creating the arrays iteratively
+        for i, en in enumerate(self.pot):
+            if (
+                en == self.v_graf[-1]
+            ):  # If this layer has the same energy as the previous one
+                self.x_graf = np.append(
+                    self.x_graf, [self.x_graf[-1] + self.estrutura[i]]
+                )
+                self.v_graf = np.append(self.v_graf, [en])
+            else:
+                self.x_graf = np.append(
+                    self.x_graf, [self.x_graf[-1], self.x_graf[-1] + self.estrutura[i]]
+                )
+                self.v_graf = np.append(self.v_graf, [en, en])
+
+        # Changing x and y to [nm] and [meV]
+        self.x_graf = 1.0e9 * self.x_graf
+        self.v_graf = 1.0e3 * self.v_graf
+
+        # Centering the structure around 0
+        self.x_graf = self.x_graf - (np.max(self.x_graf) - np.min(self.x_graf)) / 2.0
+
+        # fig, axs = plt.subplots(2)
+        # fig.suptitle(&#39;Vertically stacked subplots&#39;)
+        # # plt.clf()
+        # plt.xlabel(&#39;Length (nm)&#39;)
+        # plt.ylabel(&#39;Energy (meV)&#39;)
+        # plt.xlim([0, 80])
+        # plt.ylim([-50, 700])
+        # axs[0].plot(self.x_graf, self.v_graf) # x in [nm] and y in [meV]
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, gridspec_kw={&#34;width_ratios&#34;: [3, 1]})
+        # fig, (ax1, ax2) = plt.subplots(2,1)
+        # fig, axs = plt.subplots(2,1,figsize=(16,9), gridspec_kw={&#39;height_ratios&#39;: [1, 2]})
+
+        fig.suptitle(info)
+
+        ax1.plot(self.x_graf, self.v_graf)
+        ax1.set(xlabel=&#34;Length (nm)&#34;, ylabel=&#34;Energy (meV)&#34;)
+        ax1.set(xlim=[-plot_width / 2, plot_width / 2], ylim=[-50, 900])
+
+        # print(len(self.ResultadoWF))
+        # print(self.best_index)
+        # grafica as funções de onda
+
+        # for num, result in enumerate(self.ResultadoWF, start=0):
+        #     if num == 0:
+        #         ax1.plot(result[0, :] * 1.0E9, result[3, :] * 1.0E3, color=&#39;green&#39;)
+        #     elif num == self.best_index:
+        #         ax1.plot(result[0, :] * 1.0E9, result[3, :] * 1.0E3, color=&#39;red&#39;)
+        #     else:
+        #         ax1.plot(result[0, :] * 1.0E9, result[3, :] * 1.0E3, color=&#39;#cccccc&#39;)
+
+        # ax1.plot(self.ResultadoWF[0][0, :] * 1.0E9, self.ResultadoWF[0][3, :] * 1.0E3, color=&#39;green&#39;)
+        # ax1.plot(self.ResultadoWF[self.best_index][0, :] * 1.0E9, self.ResultadoWF[self.best_index][3, :] * 1.0E3, color=&#39;red&#39;)
+        osc_max = 0
+        for res in self.results:
+            if res[1] &gt; osc_max:
+                osc_max = res[1]
+
+        for num, result in enumerate(self.ResultadoWF, start=1):
+            ax1.plot(result[0, :] * 1.0e9, result[3, :] * 1.0e3, color=&#34;#cccccc&#34;)
+
+        # print(&#34;self.ResultadoWF: &#34;, len(self.ResultadoWF))
+        # print(&#34;self.results: &#34;, len(self.results))
+
+        for jj in range(len(self.results)):
+            if self.results[jj][1] / osc_max &gt; 0.8:
+
+                red_index = jj + 1
+                ax1.plot(
+                    self.ResultadoWF[red_index][0, :] * 1.0e9,
+                    self.ResultadoWF[red_index][3, :] * 1.0e3,
+                    color=&#34;red&#34;,
+                )
+
+        # ax1.plot(self.ResultadoWF[0][0, :] * 1.0E9, self.ResultadoWF[0][3, :] * 1.0E3, color=&#39;green&#39;)
+        # ax1.plot(self.ResultadoWF[self.best_index][0, :] * 1.0E9, self.ResultadoWF[self.best_index][3, :] * 1.0E3, color=&#39;red&#39;)
+
+        ax1.plot(
+            self.ResultadoWF[0][0, :] * 1.0e9,
+            self.ResultadoWF[0][3, :] * 1.0e3,
+            color=&#34;green&#34;,
+        )
+
+        x2 = []
+        for jj in range(len(self.abs_result)):
+            x2.append(jj + 1)
+
+        for res in self.results:
+            # plt.plot(x, y, &#39;o&#39;)
+            ax2.plot(res[1], res[0] * 1000, &#34;.&#34;, color=&#34;blue&#34;)
+            # print(res[1], res[0]*1000)
+        # desenha linha na absorção na energia com Osc maior
+        # ax2.axvline(x=(self.Autoenergias[self.best_index]-self.Autoenergias[0])*1000)
+
+        # print(self.Autoenergias[self.best_index]-self.Autoenergias[0])
+
+        # for energia in self.results:
+        #     print(energia)
+        #     if energia[1]&gt;0.9:
+        #         # ax2.plot([energia[0]*1000], [1], &#39;ro&#39;)
+        #         ax2.axvline(x=energia[0]*1000)
+
+        # plt.yscale(&#39;log&#39;)
+        # ax2.set(xlim=[0, 1000], ylim=[0.000001, 2])
+
+        # plt.yscale(&#39;log&#39;)
+        # plt.xscale(&#39;log&#39;)
+
+        E0 = self.Autoenergias[0] * 1000
+        # print(E0)
+        # ax2.set(xlim=[0.00001, 1.2], ylim=[-E0-50, 950-E0-50])
+        # ax2.set(xlim=[-0.1, 1.1], ylim=[-E0-50, 950-E0-50])
+        ax2.set(ylim=[-E0 - 50, 950 - E0 - 50])
+        # ax2.set(ylim=[-E0-50, 950-E0-50])
+        # ax2.set(xlim=[0, 1000], ylim=[0, 1])
+        # ax2.set(xlabel=&#39;Energy (meV)&#39;, ylabel=&#39;Absorption (u.a.)&#39;)
+        ax2.set(xlabel=&#34;OscStrength (u.a.), max: &#34; + &#34;{:.2f}&#34;.format(osc_max))
+
+        folder_path = os.path.dirname(os.path.abspath(path_file))
+        os.makedirs(folder_path, exist_ok=True)
+        plt.savefig(path_file, dpi=150)
+
+    def RunSim(self, method, split_i, E0, Ef, dE, dx, dx_unit, central_layer):
+        &#34;&#34;&#34;
+        Main function that performs the simulation
+        &#34;&#34;&#34;
+        # Correcting the unit of dx based on the unit chosen from the interface and the 
+        # lattice parameter
+        if dx_unit == &#34;nm&#34;:
+            dx = dx * NM  # Conversion from nm to m
+        elif dx_unit == &#34;ml&#34;:
+            dx = dx * self.latpar / 2.0  # Conversion from ml to m
+        else:
+            dx = 1.0e-11
+            print(&#34;dx_unit was defined incorrectly; possible options: nm or ml&#34;)
+
+        # Creating the energy array
+        VecEnergy = np.arange(E0, Ef + dE, dE)
+        VecEnLen = len(VecEnergy)
+
+        # Creating the x-axis array - the x-axis 0 is always centered in the target 
+        # layer
+        layers = len(self.estrutura)
+        if central_layer &lt;= 0:
+            x0 = 0.0
+        else:
+            # In case the number of the layer exceeds the limit
+            if (
+                central_layer &gt; layers
+            ):  
+                central_layer = layers
+            # Thickness of target layers
+            x0 = -np.sum(self.estrutura[0:central_layer] )  
+        x_first_step = x0 + dx
+
+        # Divides the length of each layer by dx to get the number of steps in each 
+        # layer
+        # Must round and convert to int so that it can be used as a array length
+        steps_per_layer = np.around(np.abs(self.estrutura) / dx, decimals=0).astype(
+            &#34;int&#34;
+        )
+
+        # Dimension of the arrays used to calculate each step of the structure. It&#39;s 
+        # size is the number of layers plus the thickness of the layers divided by dx 
+        # and rounded.
+        length_arrays = layers + np.sum(steps_per_layer)
+        # Pre-allocating
+        x = np.zeros((length_arrays), dtype=np.float64)
+        pot = np.zeros((length_arrays), dtype=np.float64)
+        effm_cte = np.zeros((length_arrays), dtype=np.float64)
+
+        # Well Non-Parabolicity from Leavitt
+        # Nonparabw = 1.3E-18
+        # eq. 7 (PRBvol 35, number 14, pg 7770, Nelson D.F. et all,  
+        # doi.org/10.1103/PhysRevB.35.7770)
+        npe = np.zeros((length_arrays), dtype=np.float64)
+
+        pos = 0
+
+        # Going through every layer
+        for layer in range(layers):
+            x[pos] = x_first_step - dx
+            pot[pos] = self.pot[layer] - self.e_field * 1e5 * (x_first_step - dx)
+            effm_cte[pos] = self.massa_eff_const[layer]
+            npe[pos] = self.E_nonparab[layer]
+
+            pos += 1
+
+            # Going through the steps of each layer
+            for step in range(steps_per_layer[layer]):
+                x[pos] = x_first_step
+                pot[pos] = self.pot[layer] - self.e_field * 1e5 * x_first_step
+                effm_cte[pos] = self.massa_eff_const[layer]
+                npe[pos] = self.E_nonparab[layer]
+
+                # Manually taking into account the dimensions of the steps
+                x_first_step += dx
+                pos += 1
+
+        # Calculating the Transfer Matrix
+        # A transfer matrix (2,2) is calculated for each energy.
+        self.TM = np.zeros((VecEnLen, 2, 2), dtype=np.complex128)
+        self.k_ratio = np.zeros((VecEnLen), dtype=np.complex128)
+        self.TMB = np.zeros((VecEnLen, 2, 2), dtype=np.complex128)
+
+        # TODO Paralelizar o cálculo da matriz de transferência
+        for i, energy in enumerate(VecEnergy):
+            # Método rapido para identificar os auto estados (shooting)
+            # VecResultado[i] = simcore.Shooting(energy, effm_cte, pot, npe, dx)
+            # Método da matriz de transferência
+            # VecResultado[i] = simcore.T_1_1Re(1000*energy, x, effm_cte, pot, npe,
+            #                                   self.m_eff_ct_barrier)
+            self.TM[i], self.k_ratio[i], self.TMB[i] = simcore.TransferMatrix(
+                energy, x, effm_cte, pot, npe, self.m_eff_ct_barrier
+            )
+            # TODO ver ser é mais rápido rodar com Numerov
+            #  VecResultado[i] = simcore.Numerov(energy, effm_cte, pot, npe, dx)
+
+        T_11 = np.real(self.TM[:, 1, 1])
+
+        # The eigen energies are found when TM_array(1, 1) crosses zero
+        # finding eigenenergies from the real part of transmission and calculating
+        # wavefunctions
+        signs = np.sign((T_11))
+        # replace zeros with -1 (if there is 0 on the original array, np.sign returns 0)
+        signs[signs == 0] = -1
+
+        # Bound states are found at the zero-crossings
+        # Just crossing zero doesn&#39;t necessarily means it&#39;s a bound state, the second 
+        # derivative must also be negative (aka, a peak)
+        # Ref.: Elementary Quantum Mechanics in One Dimension Pg. 92
+        bound_states_indexes = np.where(np.diff(signs))[0]
+        bound_states_number = len(bound_states_indexes)
+
+        # Length of the energy array where the solution of T11 is real.
+        bound_states = np.zeros(bound_states_number, dtype=np.float64)
+
+        # The calculated wave functions are represented in (4,len(x)) arrays, one for 
+        # each bound state
+        wave_functions = np.zeros((bound_states_number, 4, length_arrays))
+
+        # If the chosen method requires a structure split, we need to calculate the 
+        # split index.
+        # The interface index must be between 1 and (layers-1). If the interface is set 
+        # at 0 or if it&#39;s equal to the number of layers,  the split method doesn&#39;t work.
+        # If interface is 0 or &#34;layers&#34;, then a non-split method should be used
+        interface = split_i
+        if interface &lt;= 0:
+            interface = 1
+        elif interface &gt;= layers:
+            interface = layers - 1
+        # The index of the split interface enables the calculation of the number of 
+        # points to the right and the left. &#34;split&#34; is the length of the left side and 
+        # the index of the first item of the right side
+        split = interface + np.sum(steps_per_layer[0:interface])
+
+        # Helper function created to run the newton method on Re(T(1,1))
+        def TM_Re11(inputE, x, effm_cte, pot, npe, m_eff_ct_barrier):
+            _, _, TMB = simcore.TransferMatrix(
+                inputE, x, effm_cte, pot, npe, m_eff_ct_barrier
+            )
+            return np.real(TMB[1, 1])
+
+        for i, crossing in enumerate(bound_states_indexes):
+            try:
+                x0 = VecEnergy[crossing]
+                # TODO Acertar tol e rtol
+                bound_states[i] = newton(
+                    TM_Re11,
+                    VecEnergy[crossing],
+                    fprime=None,
+                    args=(x, effm_cte, pot, npe, self.m_eff_ct_barrier),
+                    tol=1.0e-16,
+                    rtol=1.0e-16,
+                )
+
+            except RuntimeError:
+                print(&#34;Ignorando o erro de runtime. Energia = %f&#34; % VecEnergy[crossing])
+
+            # TODO Checar se isso ainda é necessário. Era usado com o método Shooting
+            # if WF_EnergyRe[i] &lt; 0:
+            #     print(f&#34;Invalid energy, negative: {WF_EnergyRe[i]:.3f} eV&#34;)
+            # if WF_EnergyRe[i] &gt; Ef:
+            #     print(f&#34;Invalid energy, larger than maximum: {WF_EnergyRe[i]:.3f} eV&#34;)
+
+            # Needs to invert the right side signal for odd states
+            odd = True if i % 2 &gt; 0 else False
+            if method == 0:  # Numerov - For
+                wave_functions[i] = simcore.Numerov(bound_states[i], x, effm_cte, pot)
+
+            elif method == 1:  # Numerov - Split
+                wave_functions[i] = simcore.NumerovSplit(
+                    bound_states[i], x, effm_cte, pot, odd, split_i
+                )
+            elif method == 2:  # Numerov - Arrays
+                wave_functions[i] = simcore.NumerovInArrays(
+                    bound_states[i], x, effm_cte, pot, odd, split_i
+                )
+            elif method == 3:  # TMM
+                wave_functions[i] = simcore.Funcao_de_Onda(
+                    bound_states[i], x, effm_cte, pot, npe
+                )
+
+            elif method == 4:  # TMM - Split
+                wave_functions[i] = simcore.Funcao_de_Onda_split(
+                    bound_states[i], x, effm_cte, pot, npe, odd, split
+                )
+
+        # Output arrays are stored
+        # TODO Simplify this, use &#34;self&#34; before and change name of the ones in portuguese
+        self.sim_x = x
+        self.sim_pot = pot
+        self.sim_effm_cte = effm_cte
+        self.sim_npe = npe
+        # self.sim_VecResultado = VecResultado
+        # self.sim_VecResultado = T_11
+        self.sim_VecEnergy = VecEnergy
+        # self.sim_ResultadoWF = self.ResultadoWF = ResultadoWF
+        self.sim_ResultadoWF = self.ResultadoWF = wave_functions
+        # self.sim_Energias = self.Autoenergias = WF_EnergyRe
+        self.sim_Energias = self.Autoenergias = bound_states
+
+        # This works as a signal to allow the absorption to run
+        self.sim_ran = True
+
+    def CalcAbs(self, wf_0_index, E0, Ef, dE, broadening):
+        abs = simcore.Absorption(
+            self.sim_Energias, self.sim_ResultadoWF, wf_0_index, E0, Ef, dE, broadening
+        )
+
+        self.abs_energy_axis = abs[0]
+        self.abs_result = abs[1]
+        self.abs_delta_E = abs[2]
+        self.abs_dipole = abs[3]
+        self.abs_osc_strength = self.OscStrength = abs[4]
+
+        self.abs_ran = True
+
+    def Transmission(self):
+        &#34;&#34;&#34;
+        Calculates the transmission for a given range of energies. The simulation must
+        have been run before.
+        &#34;&#34;&#34;
+        if not self.sim_ran:
+            print(&#34;The simulation must be run before calculating the transmission&#34;)
+            return
+
+        try:
+            TM_11 = self.TM[:, 1, 1]
+            self.sim_Transmission = np.real(1 / (np.absolute(TM_11))) * self.k_ratio
+            self.tra_ran = True
+        except:
+            print(&#34;Could not calculate transmission, run the simulation first&#34;)
+
+    def RunPhotocurrent(self, dx, E0, Ef, dE):
+        &#34;&#34;&#34;
+        Calculates the photocurrent for a given range of energies. The simulation must
+        have been run before.
+        &#34;&#34;&#34;
+        if not self.sim_ran:
+            print(&#34;The simulation must be run before calculating the transmission&#34;)
+            return
+        # print(f&#34;dx no Photocurrent = {dx:.15f}&#34;)
+        # Creating the energy array
+        energies = np.arange(E0, Ef + dE, dE)
+        pc = simcore.Photocurrent(
+            energies=energies,
+            x=self.sim_x,
+            pot=self.sim_pot,
+            effm_cte=self.sim_effm_cte,
+            npe=self.sim_npe,
+            psi=self.sim_ResultadoWF[0],
+            E0=self.sim_Energias[0],
+        )
+        self.sim_Photocurrent = energies, pc</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="simdata.SimData.AddBarrier"><code class="name flex">
+<span>def <span class="ident">AddBarrier</span></span>(<span>self, thickness)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adds a barrier with the desired thickness to the end of the structure.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def AddBarrier(self, thickness):
+    &#34;&#34;&#34;
+    Adds a barrier with the desired thickness to the end of the structure.
+    &#34;&#34;&#34;
+    self.estrutura = np.append(self.estrutura, thickness * NM)
+    self.material.append(self.barrier)
+    self.feature.append(&#34;Barrier&#34;)
+    self.massa_eff_const = np.append(self.massa_eff_const, self.m_eff_ct_barrier)
+    self.pot = np.append(self.pot, self.pot_barrier)
+    self.E_nonparab = np.append(self.E_nonparab, self.e_nonparab_barrier)</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.AddWell"><code class="name flex">
+<span>def <span class="ident">AddWell</span></span>(<span>self, thickness)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adds a well with the desired thickness to the end of the structure.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def AddWell(self, thickness):
+    &#34;&#34;&#34;
+    Adds a well with the desired thickness to the end of the structure.
+    &#34;&#34;&#34;
+    self.estrutura = np.append(self.estrutura, thickness * NM)
+    self.material.append(self.well)
+    self.feature.append(&#34;Well&#34;)
+    self.massa_eff_const = np.append(self.massa_eff_const, self.m_eff_ct_well)
+    self.pot = np.append(self.pot, self.pot_well)
+    self.E_nonparab = np.append(self.E_nonparab, self.e_nonparab_well)</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.CalcAbs"><code class="name flex">
+<span>def <span class="ident">CalcAbs</span></span>(<span>self, wf_0_index, E0, Ef, dE, broadening)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def CalcAbs(self, wf_0_index, E0, Ef, dE, broadening):
+    abs = simcore.Absorption(
+        self.sim_Energias, self.sim_ResultadoWF, wf_0_index, E0, Ef, dE, broadening
+    )
+
+    self.abs_energy_axis = abs[0]
+    self.abs_result = abs[1]
+    self.abs_delta_E = abs[2]
+    self.abs_dipole = abs[3]
+    self.abs_osc_strength = self.OscStrength = abs[4]
+
+    self.abs_ran = True</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.InsertBarrier"><code class="name flex">
+<span>def <span class="ident">InsertBarrier</span></span>(<span>self, thickness, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Inserts a quantum barrier with the desired thickness, after the selected layer.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def InsertBarrier(self, thickness, index):
+    &#34;&#34;&#34;
+    Inserts a quantum barrier with the desired thickness, after the selected layer.
+    &#34;&#34;&#34;
+    self.estrutura = np.insert(self.estrutura, [index + 1], thickness * NM)
+    self.material.insert(index + 1, self.barrier)
+    self.feature.insert(index + 1, &#34;Barrier&#34;)
+    self.massa_eff_const = np.insert(
+        self.massa_eff_const, [index + 1], self.m_eff_ct_barrier
+    )
+    self.pot = np.insert(self.pot, [index + 1], self.pot_barrier)
+    self.E_nonparab = np.insert(
+        self.E_nonparab, [index + 1], self.e_nonparab_barrier
+    )</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.InsertWell"><code class="name flex">
+<span>def <span class="ident">InsertWell</span></span>(<span>self, thickness, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Inserts a quantum well with the desired thickness, after the selected layer.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def InsertWell(self, thickness, index):
+    &#34;&#34;&#34;
+    Inserts a quantum well with the desired thickness, after the selected layer.
+    &#34;&#34;&#34;
+    self.estrutura = np.insert(self.estrutura, [index + 1], thickness * NM)
+    self.material.insert(index + 1, self.well)
+    self.feature.insert(index + 1, &#34;Well&#34;)
+    self.massa_eff_const = np.insert(
+        self.massa_eff_const, [index + 1], self.m_eff_ct_well
+    )
+    self.pot = np.insert(self.pot, [index + 1], self.pot_well)
+    self.E_nonparab = np.insert(self.E_nonparab, [index + 1], self.e_nonparab_well)</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.RemoveAll"><code class="name flex">
+<span>def <span class="ident">RemoveAll</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Clears the structure.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def RemoveAll(self):
+    &#34;&#34;&#34;
+    Clears the structure.
+    &#34;&#34;&#34;
+    self.estrutura = np.array([], dtype=np.float64)
+    self.massa_eff_const = np.array([], dtype=np.float64)
+    self.pot = np.array([], dtype=np.float64)
+    self.E_nonparab = np.array([], dtype=np.float64)
+    self.material = []
+    self.feature = []</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.RemoveSelected"><code class="name flex">
+<span>def <span class="ident">RemoveSelected</span></span>(<span>self, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Removes the selected layer.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def RemoveSelected(self, index):
+    &#34;&#34;&#34;
+    Removes the selected layer.
+    &#34;&#34;&#34;
+    self.estrutura = np.delete(self.estrutura, index)
+    self.massa_eff_const = np.delete(self.massa_eff_const, index)
+    self.pot = np.delete(self.pot, index)
+    self.E_nonparab = np.delete(self.E_nonparab, index)
+    self.material.pop(index)
+    self.feature.pop(index)</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.ReplaceBarrier"><code class="name flex">
+<span>def <span class="ident">ReplaceBarrier</span></span>(<span>self, thickness, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Replaces the selected layer by a quantum barrier with the desired thickness.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ReplaceBarrier(self, thickness, index):
+    &#34;&#34;&#34;
+    Replaces the selected layer by a quantum barrier with the desired thickness.
+    &#34;&#34;&#34;
+    self.estrutura[index] = thickness * NM
+    self.material[index] = self.barrier
+    self.feature[index] = &#34;Barrier&#34;
+    self.massa_eff_const[index] = self.m_eff_ct_barrier
+    self.pot[index] = self.pot_barrier
+    self.E_nonparab[index] = self.e_nonparab_barrier</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.ReplaceWell"><code class="name flex">
+<span>def <span class="ident">ReplaceWell</span></span>(<span>self, thickness, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Replaces the selected layer by a quantum well with the desired thickness.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ReplaceWell(self, thickness, index):
+    &#34;&#34;&#34;
+    Replaces the selected layer by a quantum well with the desired thickness.
+    &#34;&#34;&#34;
+    self.estrutura[index] = thickness * NM
+    self.material[index] = self.well
+    self.feature[index] = &#34;Well&#34;
+    self.massa_eff_const[index] = self.m_eff_ct_well
+    self.pot[index] = self.pot_well
+    self.E_nonparab[index] = self.e_nonparab_well</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.RunPhotocurrent"><code class="name flex">
+<span>def <span class="ident">RunPhotocurrent</span></span>(<span>self, dx, E0, Ef, dE)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculates the photocurrent for a given range of energies. The simulation must
+have been run before.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def RunPhotocurrent(self, dx, E0, Ef, dE):
+    &#34;&#34;&#34;
+    Calculates the photocurrent for a given range of energies. The simulation must
+    have been run before.
+    &#34;&#34;&#34;
+    if not self.sim_ran:
+        print(&#34;The simulation must be run before calculating the transmission&#34;)
+        return
+    # print(f&#34;dx no Photocurrent = {dx:.15f}&#34;)
+    # Creating the energy array
+    energies = np.arange(E0, Ef + dE, dE)
+    pc = simcore.Photocurrent(
+        energies=energies,
+        x=self.sim_x,
+        pot=self.sim_pot,
+        effm_cte=self.sim_effm_cte,
+        npe=self.sim_npe,
+        psi=self.sim_ResultadoWF[0],
+        E0=self.sim_Energias[0],
+    )
+    self.sim_Photocurrent = energies, pc</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.RunSim"><code class="name flex">
+<span>def <span class="ident">RunSim</span></span>(<span>self, method, split_i, E0, Ef, dE, dx, dx_unit, central_layer)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Main function that performs the simulation</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def RunSim(self, method, split_i, E0, Ef, dE, dx, dx_unit, central_layer):
+    &#34;&#34;&#34;
+    Main function that performs the simulation
+    &#34;&#34;&#34;
+    # Correcting the unit of dx based on the unit chosen from the interface and the 
+    # lattice parameter
+    if dx_unit == &#34;nm&#34;:
+        dx = dx * NM  # Conversion from nm to m
+    elif dx_unit == &#34;ml&#34;:
+        dx = dx * self.latpar / 2.0  # Conversion from ml to m
+    else:
+        dx = 1.0e-11
+        print(&#34;dx_unit was defined incorrectly; possible options: nm or ml&#34;)
+
+    # Creating the energy array
+    VecEnergy = np.arange(E0, Ef + dE, dE)
+    VecEnLen = len(VecEnergy)
+
+    # Creating the x-axis array - the x-axis 0 is always centered in the target 
+    # layer
+    layers = len(self.estrutura)
+    if central_layer &lt;= 0:
+        x0 = 0.0
+    else:
+        # In case the number of the layer exceeds the limit
+        if (
+            central_layer &gt; layers
+        ):  
+            central_layer = layers
+        # Thickness of target layers
+        x0 = -np.sum(self.estrutura[0:central_layer] )  
+    x_first_step = x0 + dx
+
+    # Divides the length of each layer by dx to get the number of steps in each 
+    # layer
+    # Must round and convert to int so that it can be used as a array length
+    steps_per_layer = np.around(np.abs(self.estrutura) / dx, decimals=0).astype(
+        &#34;int&#34;
+    )
+
+    # Dimension of the arrays used to calculate each step of the structure. It&#39;s 
+    # size is the number of layers plus the thickness of the layers divided by dx 
+    # and rounded.
+    length_arrays = layers + np.sum(steps_per_layer)
+    # Pre-allocating
+    x = np.zeros((length_arrays), dtype=np.float64)
+    pot = np.zeros((length_arrays), dtype=np.float64)
+    effm_cte = np.zeros((length_arrays), dtype=np.float64)
+
+    # Well Non-Parabolicity from Leavitt
+    # Nonparabw = 1.3E-18
+    # eq. 7 (PRBvol 35, number 14, pg 7770, Nelson D.F. et all,  
+    # doi.org/10.1103/PhysRevB.35.7770)
+    npe = np.zeros((length_arrays), dtype=np.float64)
+
+    pos = 0
+
+    # Going through every layer
+    for layer in range(layers):
+        x[pos] = x_first_step - dx
+        pot[pos] = self.pot[layer] - self.e_field * 1e5 * (x_first_step - dx)
+        effm_cte[pos] = self.massa_eff_const[layer]
+        npe[pos] = self.E_nonparab[layer]
+
+        pos += 1
+
+        # Going through the steps of each layer
+        for step in range(steps_per_layer[layer]):
+            x[pos] = x_first_step
+            pot[pos] = self.pot[layer] - self.e_field * 1e5 * x_first_step
+            effm_cte[pos] = self.massa_eff_const[layer]
+            npe[pos] = self.E_nonparab[layer]
+
+            # Manually taking into account the dimensions of the steps
+            x_first_step += dx
+            pos += 1
+
+    # Calculating the Transfer Matrix
+    # A transfer matrix (2,2) is calculated for each energy.
+    self.TM = np.zeros((VecEnLen, 2, 2), dtype=np.complex128)
+    self.k_ratio = np.zeros((VecEnLen), dtype=np.complex128)
+    self.TMB = np.zeros((VecEnLen, 2, 2), dtype=np.complex128)
+
+    # TODO Paralelizar o cálculo da matriz de transferência
+    for i, energy in enumerate(VecEnergy):
+        # Método rapido para identificar os auto estados (shooting)
+        # VecResultado[i] = simcore.Shooting(energy, effm_cte, pot, npe, dx)
+        # Método da matriz de transferência
+        # VecResultado[i] = simcore.T_1_1Re(1000*energy, x, effm_cte, pot, npe,
+        #                                   self.m_eff_ct_barrier)
+        self.TM[i], self.k_ratio[i], self.TMB[i] = simcore.TransferMatrix(
+            energy, x, effm_cte, pot, npe, self.m_eff_ct_barrier
+        )
+        # TODO ver ser é mais rápido rodar com Numerov
+        #  VecResultado[i] = simcore.Numerov(energy, effm_cte, pot, npe, dx)
+
+    T_11 = np.real(self.TM[:, 1, 1])
+
+    # The eigen energies are found when TM_array(1, 1) crosses zero
+    # finding eigenenergies from the real part of transmission and calculating
+    # wavefunctions
+    signs = np.sign((T_11))
+    # replace zeros with -1 (if there is 0 on the original array, np.sign returns 0)
+    signs[signs == 0] = -1
+
+    # Bound states are found at the zero-crossings
+    # Just crossing zero doesn&#39;t necessarily means it&#39;s a bound state, the second 
+    # derivative must also be negative (aka, a peak)
+    # Ref.: Elementary Quantum Mechanics in One Dimension Pg. 92
+    bound_states_indexes = np.where(np.diff(signs))[0]
+    bound_states_number = len(bound_states_indexes)
+
+    # Length of the energy array where the solution of T11 is real.
+    bound_states = np.zeros(bound_states_number, dtype=np.float64)
+
+    # The calculated wave functions are represented in (4,len(x)) arrays, one for 
+    # each bound state
+    wave_functions = np.zeros((bound_states_number, 4, length_arrays))
+
+    # If the chosen method requires a structure split, we need to calculate the 
+    # split index.
+    # The interface index must be between 1 and (layers-1). If the interface is set 
+    # at 0 or if it&#39;s equal to the number of layers,  the split method doesn&#39;t work.
+    # If interface is 0 or &#34;layers&#34;, then a non-split method should be used
+    interface = split_i
+    if interface &lt;= 0:
+        interface = 1
+    elif interface &gt;= layers:
+        interface = layers - 1
+    # The index of the split interface enables the calculation of the number of 
+    # points to the right and the left. &#34;split&#34; is the length of the left side and 
+    # the index of the first item of the right side
+    split = interface + np.sum(steps_per_layer[0:interface])
+
+    # Helper function created to run the newton method on Re(T(1,1))
+    def TM_Re11(inputE, x, effm_cte, pot, npe, m_eff_ct_barrier):
+        _, _, TMB = simcore.TransferMatrix(
+            inputE, x, effm_cte, pot, npe, m_eff_ct_barrier
+        )
+        return np.real(TMB[1, 1])
+
+    for i, crossing in enumerate(bound_states_indexes):
+        try:
+            x0 = VecEnergy[crossing]
+            # TODO Acertar tol e rtol
+            bound_states[i] = newton(
+                TM_Re11,
+                VecEnergy[crossing],
+                fprime=None,
+                args=(x, effm_cte, pot, npe, self.m_eff_ct_barrier),
+                tol=1.0e-16,
+                rtol=1.0e-16,
+            )
+
+        except RuntimeError:
+            print(&#34;Ignorando o erro de runtime. Energia = %f&#34; % VecEnergy[crossing])
+
+        # TODO Checar se isso ainda é necessário. Era usado com o método Shooting
+        # if WF_EnergyRe[i] &lt; 0:
+        #     print(f&#34;Invalid energy, negative: {WF_EnergyRe[i]:.3f} eV&#34;)
+        # if WF_EnergyRe[i] &gt; Ef:
+        #     print(f&#34;Invalid energy, larger than maximum: {WF_EnergyRe[i]:.3f} eV&#34;)
+
+        # Needs to invert the right side signal for odd states
+        odd = True if i % 2 &gt; 0 else False
+        if method == 0:  # Numerov - For
+            wave_functions[i] = simcore.Numerov(bound_states[i], x, effm_cte, pot)
+
+        elif method == 1:  # Numerov - Split
+            wave_functions[i] = simcore.NumerovSplit(
+                bound_states[i], x, effm_cte, pot, odd, split_i
+            )
+        elif method == 2:  # Numerov - Arrays
+            wave_functions[i] = simcore.NumerovInArrays(
+                bound_states[i], x, effm_cte, pot, odd, split_i
+            )
+        elif method == 3:  # TMM
+            wave_functions[i] = simcore.Funcao_de_Onda(
+                bound_states[i], x, effm_cte, pot, npe
+            )
+
+        elif method == 4:  # TMM - Split
+            wave_functions[i] = simcore.Funcao_de_Onda_split(
+                bound_states[i], x, effm_cte, pot, npe, odd, split
+            )
+
+    # Output arrays are stored
+    # TODO Simplify this, use &#34;self&#34; before and change name of the ones in portuguese
+    self.sim_x = x
+    self.sim_pot = pot
+    self.sim_effm_cte = effm_cte
+    self.sim_npe = npe
+    # self.sim_VecResultado = VecResultado
+    # self.sim_VecResultado = T_11
+    self.sim_VecEnergy = VecEnergy
+    # self.sim_ResultadoWF = self.ResultadoWF = ResultadoWF
+    self.sim_ResultadoWF = self.ResultadoWF = wave_functions
+    # self.sim_Energias = self.Autoenergias = WF_EnergyRe
+    self.sim_Energias = self.Autoenergias = bound_states
+
+    # This works as a signal to allow the absorption to run
+    self.sim_ran = True</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.SaveStructure_best_osc"><code class="name flex">
+<span>def <span class="ident">SaveStructure_best_osc</span></span>(<span>self, path_file='test.png', info='x', plot_width=80)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def SaveStructure_best_osc(self, path_file=&#34;test.png&#34;, info=&#34;x&#34;, plot_width=80):
+    self.x_graf = np.array([0])
+    self.v_graf = np.array([self.pot[0]])
+
+    # Going through the layers and creating the arrays iteratively
+    for i, en in enumerate(self.pot):
+        if (
+            en == self.v_graf[-1]
+        ):  # If this layer has the same energy as the previous one
+            self.x_graf = np.append(
+                self.x_graf, [self.x_graf[-1] + self.estrutura[i]]
+            )
+            self.v_graf = np.append(self.v_graf, [en])
+        else:
+            self.x_graf = np.append(
+                self.x_graf, [self.x_graf[-1], self.x_graf[-1] + self.estrutura[i]]
+            )
+            self.v_graf = np.append(self.v_graf, [en, en])
+
+    # Changing x and y to [nm] and [meV]
+    self.x_graf = 1.0e9 * self.x_graf
+    self.v_graf = 1.0e3 * self.v_graf
+
+    # Centering the structure around 0
+    self.x_graf = self.x_graf - (np.max(self.x_graf) - np.min(self.x_graf)) / 2.0
+
+    # fig, axs = plt.subplots(2)
+    # fig.suptitle(&#39;Vertically stacked subplots&#39;)
+    # # plt.clf()
+    # plt.xlabel(&#39;Length (nm)&#39;)
+    # plt.ylabel(&#39;Energy (meV)&#39;)
+    # plt.xlim([0, 80])
+    # plt.ylim([-50, 700])
+    # axs[0].plot(self.x_graf, self.v_graf) # x in [nm] and y in [meV]
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, gridspec_kw={&#34;width_ratios&#34;: [3, 1]})
+    # fig, (ax1, ax2) = plt.subplots(2,1)
+    # fig, axs = plt.subplots(2,1,figsize=(16,9), gridspec_kw={&#39;height_ratios&#39;: [1, 2]})
+
+    fig.suptitle(info)
+
+    ax1.plot(self.x_graf, self.v_graf)
+    ax1.set(xlabel=&#34;Length (nm)&#34;, ylabel=&#34;Energy (meV)&#34;)
+    ax1.set(xlim=[-plot_width / 2, plot_width / 2], ylim=[-50, 900])
+
+    # print(len(self.ResultadoWF))
+    # print(self.best_index)
+    # grafica as funções de onda
+
+    # for num, result in enumerate(self.ResultadoWF, start=0):
+    #     if num == 0:
+    #         ax1.plot(result[0, :] * 1.0E9, result[3, :] * 1.0E3, color=&#39;green&#39;)
+    #     elif num == self.best_index:
+    #         ax1.plot(result[0, :] * 1.0E9, result[3, :] * 1.0E3, color=&#39;red&#39;)
+    #     else:
+    #         ax1.plot(result[0, :] * 1.0E9, result[3, :] * 1.0E3, color=&#39;#cccccc&#39;)
+
+    # ax1.plot(self.ResultadoWF[0][0, :] * 1.0E9, self.ResultadoWF[0][3, :] * 1.0E3, color=&#39;green&#39;)
+    # ax1.plot(self.ResultadoWF[self.best_index][0, :] * 1.0E9, self.ResultadoWF[self.best_index][3, :] * 1.0E3, color=&#39;red&#39;)
+    osc_max = 0
+    for res in self.results:
+        if res[1] &gt; osc_max:
+            osc_max = res[1]
+
+    for num, result in enumerate(self.ResultadoWF, start=1):
+        ax1.plot(result[0, :] * 1.0e9, result[3, :] * 1.0e3, color=&#34;#cccccc&#34;)
+
+    # print(&#34;self.ResultadoWF: &#34;, len(self.ResultadoWF))
+    # print(&#34;self.results: &#34;, len(self.results))
+
+    for jj in range(len(self.results)):
+        if self.results[jj][1] / osc_max &gt; 0.8:
+
+            red_index = jj + 1
+            ax1.plot(
+                self.ResultadoWF[red_index][0, :] * 1.0e9,
+                self.ResultadoWF[red_index][3, :] * 1.0e3,
+                color=&#34;red&#34;,
+            )
+
+    # ax1.plot(self.ResultadoWF[0][0, :] * 1.0E9, self.ResultadoWF[0][3, :] * 1.0E3, color=&#39;green&#39;)
+    # ax1.plot(self.ResultadoWF[self.best_index][0, :] * 1.0E9, self.ResultadoWF[self.best_index][3, :] * 1.0E3, color=&#39;red&#39;)
+
+    ax1.plot(
+        self.ResultadoWF[0][0, :] * 1.0e9,
+        self.ResultadoWF[0][3, :] * 1.0e3,
+        color=&#34;green&#34;,
+    )
+
+    x2 = []
+    for jj in range(len(self.abs_result)):
+        x2.append(jj + 1)
+
+    for res in self.results:
+        # plt.plot(x, y, &#39;o&#39;)
+        ax2.plot(res[1], res[0] * 1000, &#34;.&#34;, color=&#34;blue&#34;)
+        # print(res[1], res[0]*1000)
+    # desenha linha na absorção na energia com Osc maior
+    # ax2.axvline(x=(self.Autoenergias[self.best_index]-self.Autoenergias[0])*1000)
+
+    # print(self.Autoenergias[self.best_index]-self.Autoenergias[0])
+
+    # for energia in self.results:
+    #     print(energia)
+    #     if energia[1]&gt;0.9:
+    #         # ax2.plot([energia[0]*1000], [1], &#39;ro&#39;)
+    #         ax2.axvline(x=energia[0]*1000)
+
+    # plt.yscale(&#39;log&#39;)
+    # ax2.set(xlim=[0, 1000], ylim=[0.000001, 2])
+
+    # plt.yscale(&#39;log&#39;)
+    # plt.xscale(&#39;log&#39;)
+
+    E0 = self.Autoenergias[0] * 1000
+    # print(E0)
+    # ax2.set(xlim=[0.00001, 1.2], ylim=[-E0-50, 950-E0-50])
+    # ax2.set(xlim=[-0.1, 1.1], ylim=[-E0-50, 950-E0-50])
+    ax2.set(ylim=[-E0 - 50, 950 - E0 - 50])
+    # ax2.set(ylim=[-E0-50, 950-E0-50])
+    # ax2.set(xlim=[0, 1000], ylim=[0, 1])
+    # ax2.set(xlabel=&#39;Energy (meV)&#39;, ylabel=&#39;Absorption (u.a.)&#39;)
+    ax2.set(xlabel=&#34;OscStrength (u.a.), max: &#34; + &#34;{:.2f}&#34;.format(osc_max))
+
+    folder_path = os.path.dirname(os.path.abspath(path_file))
+    os.makedirs(folder_path, exist_ok=True)
+    plt.savefig(path_file, dpi=150)</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.Transmission"><code class="name flex">
+<span>def <span class="ident">Transmission</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculates the transmission for a given range of energies. The simulation must
+have been run before.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Transmission(self):
+    &#34;&#34;&#34;
+    Calculates the transmission for a given range of energies. The simulation must
+    have been run before.
+    &#34;&#34;&#34;
+    if not self.sim_ran:
+        print(&#34;The simulation must be run before calculating the transmission&#34;)
+        return
+
+    try:
+        TM_11 = self.TM[:, 1, 1]
+        self.sim_Transmission = np.real(1 / (np.absolute(TM_11))) * self.k_ratio
+        self.tra_ran = True
+    except:
+        print(&#34;Could not calculate transmission, run the simulation first&#34;)</code></pre>
+</details>
+</dd>
+<dt id="simdata.SimData.check_values"><code class="name flex">
+<span>def <span class="ident">check_values</span></span>(<span>self, barrier_higher=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_values(self, barrier_higher=True):
+    self.results = []
+    if barrier_higher:
+        for i in range(len(self.OscStrength)):
+            if self.Autoenergias[i + 1] &gt; self.pot_barrier:
+                self.results.append(
+                    [
+                        self.Autoenergias[i + 1] - self.Autoenergias[0],
+                        self.OscStrength[i],
+                        [self.Autoenergias[i + 1], self.Autoenergias[0]],
+                        i + 1,
+                    ]
+                )
+    else:
+        for i in range(len(self.OscStrength)):
+            self.results.append(
+                [
+                    self.Autoenergias[i + 1] - self.Autoenergias[0],
+                    self.OscStrength[i],
+                    [self.Autoenergias[i + 1], self.Autoenergias[0]],
+                    i + 1,
+                ]
+            )</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="simdata.SimData" href="#simdata.SimData">SimData</a></code></h4>
+<ul class="">
+<li><code><a title="simdata.SimData.AddBarrier" href="#simdata.SimData.AddBarrier">AddBarrier</a></code></li>
+<li><code><a title="simdata.SimData.AddWell" href="#simdata.SimData.AddWell">AddWell</a></code></li>
+<li><code><a title="simdata.SimData.CalcAbs" href="#simdata.SimData.CalcAbs">CalcAbs</a></code></li>
+<li><code><a title="simdata.SimData.InsertBarrier" href="#simdata.SimData.InsertBarrier">InsertBarrier</a></code></li>
+<li><code><a title="simdata.SimData.InsertWell" href="#simdata.SimData.InsertWell">InsertWell</a></code></li>
+<li><code><a title="simdata.SimData.RemoveAll" href="#simdata.SimData.RemoveAll">RemoveAll</a></code></li>
+<li><code><a title="simdata.SimData.RemoveSelected" href="#simdata.SimData.RemoveSelected">RemoveSelected</a></code></li>
+<li><code><a title="simdata.SimData.ReplaceBarrier" href="#simdata.SimData.ReplaceBarrier">ReplaceBarrier</a></code></li>
+<li><code><a title="simdata.SimData.ReplaceWell" href="#simdata.SimData.ReplaceWell">ReplaceWell</a></code></li>
+<li><code><a title="simdata.SimData.RunPhotocurrent" href="#simdata.SimData.RunPhotocurrent">RunPhotocurrent</a></code></li>
+<li><code><a title="simdata.SimData.RunSim" href="#simdata.SimData.RunSim">RunSim</a></code></li>
+<li><code><a title="simdata.SimData.SaveStructure_best_osc" href="#simdata.SimData.SaveStructure_best_osc">SaveStructure_best_osc</a></code></li>
+<li><code><a title="simdata.SimData.Transmission" href="#simdata.SimData.Transmission">Transmission</a></code></li>
+<li><code><a title="simdata.SimData.check_values" href="#simdata.SimData.check_values">check_values</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
