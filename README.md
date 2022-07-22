@@ -44,7 +44,7 @@ Peer-Reviewed Articles
  - [Exploring Parity Anomaly for Dual Peak Infrared Photodetection](https://doi.org/10.1109/JQE.2016.2623271)
 
 Thesis  
-[Fotodetector de Duas cores Baseado em Super-Rede Assimétrica](https://doi.org/10.17771/PUCRio.acad.49584)
-Tese Germano  
-[Fotodetectored de Infravermelho Baseados em Superredes Assimétricas com Estados Vazantes no Contínuo](https://doi.org/10.17771/PUCRio.acad.48004)
-[Detecção de Radiação Infravermelho com QWIPs Além do Limite do Bandoffset](https://doi.org/10.17771/PUCRio.acad.27620)
+ - [Fotodetector de Duas cores Baseado em Super-Rede Assimétrica](https://doi.org/10.17771/PUCRio.acad.49584)
+ - Tese Germano  
+ - [Fotodetectored de Infravermelho Baseados em Superredes Assimétricas com Estados Vazantes no Contínuo](https://doi.org/10.17771/PUCRio.acad.48004)
+ - [Detecção de Radiação Infravermelho com QWIPs Além do Limite do Bandoffset](https://doi.org/10.17771/PUCRio.acad.27620)
