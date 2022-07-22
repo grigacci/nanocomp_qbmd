@@ -6,8 +6,8 @@ User-friendly software to calculate optoelectronic properties of quantum well sy
 - Photocurrent spectrum
 
 Materials  
-- GaAs
-- AlGaAs
+- InAlAs
+- InGaAs
 
 
 License
@@ -35,6 +35,7 @@ Authors
 References and Related Literature
 ===
 Peer-Reviewed Articles  
+ - [e-mulate: a user-friendly software to calculate optoelectronic properties of quantum well systems](https://doi.org/10.1109/SBMicro50945.2021.9585740)
  - [Quantum Well Infrared Photodetector for the SWIR Range](https://doi.org/10.1007/978-981-13-9155-2_29)
  - [Electronic Confinement in the Continuum: Leaky Bragg Mirror for Electrons](https://doi.org/10.29292/jics.v15i1.109)
  - [Progress in Symmetric and Asymmetric Superlattice Quantum Well Infrared Photodetectors](https://doi.org/10.1002/andp.201800462)  
@@ -43,7 +44,7 @@ Peer-Reviewed Articles
  - [Exploring Parity Anomaly for Dual Peak Infrared Photodetection](https://doi.org/10.1109/JQE.2016.2623271)
 
 Thesis  
+[Fotodetector de Duas cores Baseado em Super-Rede Assimétrica](https://doi.org/10.17771/PUCRio.acad.49584)
 Tese Germano  
-Tese Pedro  
-Tese Rogério  
-Tese Lesslie  
+[Fotodetectored de Infravermelho Baseados em Superredes Assimétricas com Estados Vazantes no Contínuo](https://doi.org/10.17771/PUCRio.acad.48004)
+[Detecção de Radiação Infravermelho com QWIPs Além do Limite do Bandoffset](https://doi.org/10.17771/PUCRio.acad.27620)
