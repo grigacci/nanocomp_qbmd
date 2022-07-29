@@ -45,6 +45,6 @@ Peer-Reviewed Articles
 
 Thesis  
  - [Fotodetector de Duas cores Baseado em Super-Rede Assimétrica](https://doi.org/10.17771/PUCRio.acad.49584)
- - Tese Germano  
+ - [Investigação Teórica e Experimental do Papel do Super-Redes em Fotodetectores de Infravermelho Médio Baseados em Poços Quânticos](https://minerva.ufrj.br/F/3VQTGB9RTKGR34GFVE47UI166FE4R2AFPRGFTU2URI4G4ND412-38272?func=service-media-exec&doc_library=UFR01&doc_number=000826288&media_index=00001&func_code=WEB-BRIEF)
  - [Fotodetectored de Infravermelho Baseados em Superredes Assimétricas com Estados Vazantes no Contínuo](https://doi.org/10.17771/PUCRio.acad.48004)
  - [Detecção de Radiação Infravermelho com QWIPs Além do Limite do Bandoffset](https://doi.org/10.17771/PUCRio.acad.27620)
