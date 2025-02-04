@@ -1202,13 +1202,13 @@ class MainWindow(QMainWindow):
         cfg["adva"]["use_nanometers"] = (
             "True" if self.adv_nm_layers_chkbx.checkState() else "False"
         )
-        cfg["adva"]["autorun_abs"] = (
-            "True" if self.adv_autorun_abs_chkbx.checkState() else "False"
-        )
-        cfg["adva"]["autorun_abs_initial_WF"] = f"{self.adv_wf0_spb.value()}"
-        cfg["adva"]["autorun_trans"] = (
-            "True" if self.adv_autorun_trans_chkbx.checkState() else "False"
-        )
+        # cfg["adva"]["autorun_abs"] = (
+        #     "True" if self.adv_autorun_abs_chkbx.checkState() else "False"
+        # )
+        # cfg["adva"]["autorun_abs_initial_WF"] = f"{self.adv_wf0_spb.value()}"
+        # cfg["adva"]["autorun_trans"] = (
+        #     "True" if self.adv_autorun_trans_chkbx.checkState() else "False"
+        # )
         cfg["adva"]["interface_to_split"] = f"{self.adv_split_layer_spb.value()}"
         cfg["adva"]["method"] = f"{self.adv_method_cbox.currentIndex()}"
 
