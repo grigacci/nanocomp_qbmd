@@ -51,8 +51,7 @@ def Shooting(inputE, effm_cte, pot, npe, dx):
         # Nas interfaces a matriz descontinuidade deve levar em conta as massas das
         # camadas, e nao a media das massas
         Psi_qp = m_q[i] * (
-            ((a_ct * V_q_array_E[i]) + 1.0 / m_qn + 1.0 / m_q[i]) * Psi_q
-            - Psi_qn / m_qn
+            ((a_ct * V_q_array_E[i]) + 1.0 / m_qn + 1.0 / m_q[i]) * Psi_q - Psi_qn / m_qn
         )
         Psi_qn = Psi_q
         Psi_q = Psi_qp
@@ -78,7 +77,7 @@ def T_1_1Re(inputE, x, effm_cte, pot, npe, m_eff_ct_barrier):
         Energy = Energy * (1.0 + 1.0e-8)
 
     # Creating the transfer matrix as a complex identity (avoids casting type errors)
-    Transfer = np.mat([[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 1.0 + 0.0j]])
+    Transfer = np.array([[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 1.0 + 0.0j]], dtype=np.complex128)
 
     # The first step should always be a discontinuity like an unity matriz
     effm_i = effm_cte[0] * (1.0 + (Energy - pot[0]) / npe[0])
@@ -137,11 +136,12 @@ def T_1_1Re(inputE, x, effm_cte, pot, npe, m_eff_ct_barrier):
     gamma_i = (wave_k[-1] * effm_bound) / (effm[-1] * wave_k_bound) + 0.0j
 
     D_i = (
-        np.mat(
+        np.array(
             [
                 [1.0 + gamma_i + 0.0j, 1.0 - gamma_i + 0.0j],
                 [1.0 - gamma_i + 0.0j, 1.0 + gamma_i + 0.0j],
-            ]
+            ],
+            dtype=np.complex128,
         )
         * 0.5
     )
@@ -149,16 +149,18 @@ def T_1_1Re(inputE, x, effm_cte, pot, npe, m_eff_ct_barrier):
     gamma_f = (effm_0 * wave_k_bound) / (wave_k_zero * effm_bound) + 0.0j
 
     D_f = (
-        np.mat(
+        np.array(
             [
                 [1.0 + gamma_f + 0.0j, 1.0 - gamma_f + 0.0j],
                 [1.0 - gamma_f + 0.0j, 1.0 + gamma_f + 0.0j],
-            ]
+            ],
+            dtype=np.complex128,
         )
         * 0.5
     )
 
-    Transfer = D_i * Transfer * D_f
+    # Transfer = D_i * Transfer * D_f
+    Transfer = (D_i @ Transfer) @ D_f
     # terminando condicao de contorno
     # o transfer eh real, forcando para funcionar a funcao de newton para encontrar os zeros
 
@@ -287,9 +289,7 @@ def NumerovSplit(inputE, x, effm_cte, pot, odd, split):
     # Normalization of the Wavefunction
     psi_total = psi_total / sm.sqrt(norm)
 
-    Resultado = np.array(
-        [x, np.real(psi_total), np.imag(psi_total), np.real(vec_probability)]
-    )
+    Resultado = np.array([x, np.real(psi_total), np.imag(psi_total), np.real(vec_probability)])
 
     print(f"Total time: {time.time() - numerov_t_start:.3f} s")
 
@@ -348,14 +348,10 @@ def NumerovInArrays(inputE, x, effm_cte, pot, odd, split):
     bc_R = 1 + ((dx**2.0) * (k_R**2.0) / 12)
 
     for i in range(1, split - 1):
-        psi_L[i + 1] = ((a_L[i] * psi_L[i]) - (bc_L[i - 1] * psi_L[i - 1])) / bc_L[
-            i + 1
-        ]
+        psi_L[i + 1] = ((a_L[i] * psi_L[i]) - (bc_L[i - 1] * psi_L[i - 1])) / bc_L[i + 1]
 
     for i in range(1, len(x) - split - 1):
-        psi_R[i + 1] = ((a_R[i] * psi_R[i]) - (bc_R[i - 1] * psi_R[i - 1])) / bc_R[
-            i + 1
-        ]
+        psi_R[i + 1] = ((a_R[i] * psi_R[i]) - (bc_R[i - 1] * psi_R[i - 1])) / bc_R[i + 1]
     # If the eigenstate is odd, invert the right side
     if odd:
         psi_R = -psi_R
@@ -377,9 +373,7 @@ def NumerovInArrays(inputE, x, effm_cte, pot, odd, split):
     # Normalization of the Wavefunction
     psi_total = psi_total / sm.sqrt(norm)
 
-    Resultado = np.array(
-        [x, np.real(psi_total), np.imag(psi_total), np.real(vec_probability)]
-    )
+    Resultado = np.array([x, np.real(psi_total), np.imag(psi_total), np.real(vec_probability)])
 
     print(f"Total time: {time.time() - numerov_t_start:.3f} s")
 
@@ -392,7 +386,7 @@ def Funcao_de_Onda(inputE, x, effm_cte, pot, npe):
     """
     # Timing
     # t_f_o_start = time.time()
-    WFunction = np.mat([[-1.0 + 0.0j], [1.0 + 0.0j]])
+    WFunction = np.array([[-1.0 + 0.0j], [1.0 + 0.0j]], dtype=np.complex128)
 
     # Bound states can be always real - pag 123 intro to QM in one dimension
     VecWFunction = np.zeros_like(x, dtype=complex)
@@ -406,7 +400,7 @@ def Funcao_de_Onda(inputE, x, effm_cte, pot, npe):
         Energy = Energy * (1.0 + 1.0e-8)
 
     # Creating the transfer matrix as a complex identity (avoids casting type errors)
-    # Transfer = np.mat([[1 + 0j, 0 + 0j], [0 + 0j, 1 + 0j]])
+    # Transfer = np.array([[1 + 0j, 0 + 0j], [0 + 0j, 1 + 0j]])
 
     # Trying to calculate some things before the loop - Effective mass and wavenumber
 
@@ -466,9 +460,7 @@ def Funcao_de_Onda(inputE, x, effm_cte, pot, npe):
     VecProbability = 0.1 * VecProbability / max(VecProbability) + inputE
     VecWFunction = VecWFunction / sm.sqrt(norm)
 
-    Resultado = np.array(
-        [x, np.real(VecWFunction), np.imag(VecWFunction), np.real(VecProbability)]
-    )
+    Resultado = np.array([x, np.real(VecWFunction), np.imag(VecWFunction), np.real(VecProbability)])
     # retornando a posicao X, parte real, parte imaginaria da funcao de onda e a densidade
     # de probabilidade
     return Resultado
@@ -482,8 +474,8 @@ def Funcao_de_Onda_split(inputE, x, effm_cte, pot, npe, odd, split):
     (xmax -> x-). The parts meet and should be equal at the interface of a well.
     Before performing the split+join, calculating everything from both directions to test.
     """
-    WFunction_L = np.mat([[-1.0 + 0.0j], [1.0 + 0.0j]])
-    WFunction_R = np.mat([[-1.0 + 0.0j], [1.0 + 0.0j]])
+    WFunction_L = np.array([[-1.0 + 0.0j], [1.0 + 0.0j]], dtype=np.complex128)
+    WFunction_R = np.array([[-1.0 + 0.0j], [1.0 + 0.0j]], dtype=np.complex128)
 
     # Bound states can be always real - pag 123 intro to QM in one dimension
     # With reduced dimensions, to merge the calculations
@@ -620,9 +612,7 @@ def Funcao_de_Onda_split(inputE, x, effm_cte, pot, npe, odd, split):
 
     # Returns the x, real and imaginary parts of the wavefunction, and real part of the
     # probability density function
-    result = np.array(
-        [x, np.real(vec_wfunction), np.imag(vec_wfunction), np.real(vec_probability)]
-    )
+    result = np.array([x, np.real(vec_wfunction), np.imag(vec_wfunction), np.real(vec_probability)])
     return result
 
 
@@ -655,9 +645,7 @@ def Absorption(Energias, ResultadoWF, wf_0_index, E0, Ef, dE, broadening):
             Dipole += [DipoleMoment]
             DeltaE_float = (Energia[i] - E_wf_0) * E_CHARGE
             DeltaE += [Energia[i] - E_wf_0]  # in eV
-            OscStrength += [
-                2 * E_MASS * DeltaE_float * abs(DipoleMoment) ** 2 / (HBAR * HBAR)
-            ]
+            OscStrength += [2 * E_MASS * DeltaE_float * abs(DipoleMoment) ** 2 / (HBAR * HBAR)]
 
     DeltaE = np.asarray(DeltaE)
     OscStrength = np.asarray(OscStrength)
@@ -694,7 +682,7 @@ def TransferMatrixPedro(inputE, x, effm_cte, pot, npe, m_eff_ct_barrier):
 
     # Creating the transfer matrix as a complex identity (avoids casting type errors)
     # The first step should always be a discontinuity like an unity matrix
-    T0 = np.mat([[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 1.0 + 0.0j]])
+    T0 = np.array([[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 1.0 + 0.0j]], dtype=np.complex128)
     # Preallocating matrices that will be used in the loop
     P_inicial = np.empty((2, 2), dtype=complex)
     P_final = np.empty((2, 2), dtype=complex)
@@ -726,11 +714,8 @@ def TransferMatrixPedro(inputE, x, effm_cte, pot, npe, m_eff_ct_barrier):
         Dn[1, 0] = 0.5 * (1 - beta)
         Dn[1, 1] = 0.5 * (1 + beta)
 
-        # AUX = P_inicial * Dn
         aux = P_inicial @ Dn
-        # Ti = AUX * P_final
         Ti = aux @ P_final
-        # T = T0 * Ti
         T = T0 @ Ti
         # Conta total:
         # T = T0 * ((P_inicial * Dn) * P_final)
@@ -781,7 +766,7 @@ def TransferMatrix(inputE, x, effm_cte, pot, npe, m_eff_ct_barrier):
 
     # Creating the transfer matrix as a complex identity (avoids casting type errors)
     # The first step should always be a discontinuity like an unity matrix
-    Transfer = np.mat([[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 1.0 + 0.0j]])
+    Transfer = np.array([[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 1.0 + 0.0j]], dtype=np.complex128)
 
     # Calculation of the effective mass at the first points
     effm_i = effm_cte[0] * (1.0 + (Energy - pot[0]) / npe[0])
@@ -856,11 +841,12 @@ def TransferMatrix(inputE, x, effm_cte, pot, npe, m_eff_ct_barrier):
     gamma_i = (k[-1] * effm_bound) / (effm[-1] * k_boundary) + 0.0j
 
     D_i = (
-        np.mat(
+        np.array(
             [
                 [1.0 + gamma_i + 0.0j, 1.0 - gamma_i + 0.0j],
                 [1.0 - gamma_i + 0.0j, 1.0 + gamma_i + 0.0j],
-            ]
+            ],
+            dtype=np.complex128,
         )
         * 0.5
     )
@@ -868,11 +854,12 @@ def TransferMatrix(inputE, x, effm_cte, pot, npe, m_eff_ct_barrier):
     gamma_f = (effm_0 * k_boundary) / (k_zero * effm_bound) + 0.0j
 
     D_f = (
-        np.mat(
+        np.array(
             [
                 [1.0 + gamma_f + 0.0j, 1.0 - gamma_f + 0.0j],
                 [1.0 - gamma_f + 0.0j, 1.0 + gamma_f + 0.0j],
-            ]
+            ],
+            dtype=np.complex128,
         )
         * 0.5
     )
@@ -919,7 +906,7 @@ def Photocurrent(energies, x, pot, effm_cte, npe, psi, E0):
         effm = np.zeros(len_arrays, dtype=np.float64)
         k = np.zeros(len_arrays, dtype=np.complex128)
 
-        # In order to calculate the effective mass, the energy of the wavefunction 0 
+        # In order to calculate the effective mass, the energy of the wavefunction 0
         # must be added to the calculation
         # Effective mass calculation - array with the mass at each x point.
         effm = effm_cte * (1.0 + (E0 + en - pot) / npe)
@@ -962,10 +949,9 @@ def Photocurrent(energies, x, pot, effm_cte, npe, psi, E0):
             np.exp(1.0j * k * x) * x * psi - np.exp(1.0j * k * x_nxt) * x_nxt * psi_nxt
         )
         beta_minus = -cte * (
-            np.exp(-1.0j * k * x) * x * psi
-            - np.exp(-1.0j * k * x_nxt) * x_nxt * psi_nxt
+            np.exp(-1.0j * k * x) * x * psi - np.exp(-1.0j * k * x_nxt) * x_nxt * psi_nxt
         )
-        f = np.mat([[0], [0]], dtype=np.complex128)
+        f = np.array([[0], [0]], dtype=np.complex128)
 
         # Creating the D matrix using beta
         D_mats = np.empty((len_arrays, 2, 2), dtype=np.complex128)
@@ -976,36 +962,27 @@ def Photocurrent(energies, x, pot, effm_cte, npe, psi, E0):
 
         # Creating the transfer matrix as identity, complex128 type
         # The first step should always be a discontinuity like an unity matrix
-        Transfer = np.mat([[1, 0], [0, 1]], dtype=np.complex128)
+        Transfer = np.array([[1, 0], [0, 1]], dtype=np.complex128)
 
         for j in range(len_arrays - 1):  # the first step is skipped, so -1
             """
             This loop calculates the transfer matrix by multiplying the P and D matrices
             of each layer. Without an electric field, most of these layers are
             identical, except for the ones at the interfaces between two layers and at
-            the boundaries. The parenthesis are necessary to guarantee the matrix 
+            the boundaries. The parenthesis are necessary to guarantee the matrix
             multiplication occurs in the correct order.
             Some index math is required, because the calculation is performed from right
             to left, that is, max index (len_arrays) to 1, in -1 steps
             """
             ji = len_arrays - 2 - j
             Transfer = Transfer @ ((Pi_mats[ji] @ D_mats[ji]) @ Pf_mats[ji])
-            f[0] = f[0] + (
-                Transfer[0, 0] * beta_minus[ji] + Transfer[0, 1] * beta_plus[ji]
-            )
-            f[1] = f[1] + (
-                Transfer[1, 0] * beta_minus[ji] + Transfer[1, 1] * beta_plus[ji]
-            )
+            f[0] = f[0] + (Transfer[0, 0] * beta_minus[ji] + Transfer[0, 1] * beta_plus[ji])
+            f[1] = f[1] + (Transfer[1, 0] * beta_minus[ji] + Transfer[1, 1] * beta_plus[ji])
 
         ctecur_left = (HBAR * k[0]) / effm[0]
         ctecur_right = (HBAR * k[-1]) / effm[-1]
 
-        J_left[i] = (
-            ctecur_left
-            * Fd
-            * (-f[1] / Transfer[1, 1])
-            * (np.conj(-f[1] / Transfer[1, 1]))
-        )
+        J_left[i] = ctecur_left * Fd * (-f[1] / Transfer[1, 1]) * (np.conj(-f[1] / Transfer[1, 1]))
         J_right[i] = (
             ctecur_right
             * Fd
@@ -1015,5 +992,5 @@ def Photocurrent(energies, x, pot, effm_cte, npe, psi, E0):
 
     # Time and profiling
     print(f"Total time: {time.time() - t_start:.3f} s")
-    
+
     return np.real(J_right - J_left)  # /6.966529605e-23 #    Photocurrent
