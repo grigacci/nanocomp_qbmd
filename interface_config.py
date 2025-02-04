@@ -26,7 +26,14 @@ def run(mw):
 
     base_window_cfg(mw, cfg)
     structure_tab_cfg(mw, cfg)
-
+    simulation_tab_cfg(mw, cfg)
+    absorption_tab_cfg(mw, cfg)
+    photocurrent_tab_cfg(mw, cfg)
+    genetic_algorithm_tab_cfg(mw, cfg)
+    automation_tab_cfg(mw, cfg)
+    advanced_tab_cfg(mw, cfg)
+    progress(mw, 0)
+    
 
 def read_config_file(path):
     """
@@ -147,6 +154,7 @@ def advanced_tab_cfg(mw, cfg):
     methods = ["Numerov", "Numerov - For", "Numerov - Arrays", "TMM", "TMM - Split"]
     mw.adv_method_cbox.clear()  # Clearing the combobox
     for m in methods:
+        print(m)
         mw.adv_method_cbox.addItem(m)  # Filling the combobox
     mw.adv_method_cbox.setCurrentIndex(cfg["adva"].getint("method"))
 
