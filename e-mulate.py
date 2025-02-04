@@ -20,7 +20,7 @@ from PyQt5.QtWidgets import (
 QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
 QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
-# To deal with files, time, paths...
+# To deal with files, time, paths, imports...
 import configparser
 from copy import deepcopy
 
