@@ -127,3 +127,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+linux_executable/temp_files/
