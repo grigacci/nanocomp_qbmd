@@ -1,85 +1,81 @@
 import numpy as np
+from models import SimulationResult
+from config import loadConfig
 
 
-def getQEMetric(photocurrent_file):
+def dbg():
+    """Load the config file"""
+    config = loadConfig("config.toml")
+
+    res =  getSimulationResult(config["paths"]["output_dir"] + config["paths"]["photocurrent"], config["analysis"]["peak_threshold"])
+    print(res)
+
+
+def getSimulationResult(photocurrent_file, peak_detection_threshold=0.05):
+    max_energy, max_photocurrent = getMaxPhotocurrent(photocurrent_file)
+    promience = getGetProminenceMetric(photocurrent_file, max_photocurrent, peak_detection_threshold)
+    quality_factor = getQualityFactorMetric(photocurrent_file, max_photocurrent)
+
+    simuResultObj = SimulationResult(
+        max_energy=max_energy,
+        max_photocurrent=max_photocurrent,
+        prominence=promience,
+        quality_factor=quality_factor
+    )
+
+    return simuResultObj
+
+def getMaxPhotocurrent(photocurrent_file):
+    data = np.loadtxt(photocurrent_file)
+    energy = data[:, 0]  # eV 
+    photocurrent = data[:, 1]  # normalized units
+    
+    max_photocurrent = np.max(photocurrent)
+    max_index = np.argmax(photocurrent)  
+    max_energy = energy[max_index]
+    
+    return max_energy, max_photocurrent
+
+def getQualityFactorMetric(photocurrent_file, peak_value):
     data = np.loadtxt(photocurrent_file)
     energy = data[:, 0]  # eV
     photocurrent = data[:, 1]  # normalized units
     
-    # Find peak photocurrent value
-    QE_peak = np.max(photocurrent)
+    peak_index = np.argmax(photocurrent)
+    peak_energy = energy[peak_index]
     
-    return QE_peak
+    half_max = peak_value * 0.5
+    above_half = photocurrent >= half_max
 
+    if np.sum(above_half) < 2:
+        return 0  # Not enough points to define FWHM
 
-def getAdptiveIntegratedQE(photocurrent_file, threshold_fraction=0.05):
-    """
-    Detailed example showing how multiple points exceed threshold
-    """
-    data = np.loadtxt(photocurrent_file)
-    energy = data[:, 0]
-    photocurrent = data[:, 1]
-    
-    # Step 1: Find the MAXIMUM VALUE (not index)
-    peak_value = np.max(photocurrent)  
-    # Example: peak_value = 0.92
-    
-    # Step 2: Calculate threshold as percentage of peak
-    threshold = peak_value * threshold_fraction  
-    # Example: threshold = 0.92 * 0.05 = 0.046
-    
-    # Step 3: Create boolean mask for ALL points above threshold
-    above_threshold = photocurrent > threshold
-    # This compares EVERY element in photocurrent array
-    # Example result: [F, F, F, T, T, T, T, T, T, T, F, F, F]
-    #                          ^^^^^^^^^^^^^^^^^ 
-    #                          Peak region captured
-    
-    # Step 4: Count how many points are above threshold
-    num_points_above = np.sum(above_threshold)
-    print(f"Peak value: {peak_value:.4f}")
-    print(f"Threshold (5%): {threshold:.4f}")
-    print(f"Number of points above threshold: {num_points_above}")
-    
-    # Step 5: Extract energies and photocurrents above threshold
-    energy_above = energy[above_threshold]
-    photocurrent_above = photocurrent[above_threshold]
-    
-    # Step 6: Integrate over the peak region
-    if num_points_above > 0:
-        QE_integrated = np.trapz(photocurrent_above, energy_above)
-    else:
-        QE_integrated = 0
-    
-    return QE_integrated, (energy_above[0], energy_above[-1])
+    indexes_above_half = np.where(above_half)[0]
 
+    fwhm = energy[indexes_above_half[-1]] - energy[indexes_above_half[0]]
+    
+    Q_factor = peak_energy / fwhm if fwhm != 0 else 0
+    
+    return Q_factor
 
-
-def getDarkCurrentMetric(photocurrent_file, energy_threshold=100):
+def getGetProminenceMetric(photocurrent_file, peak_value, peak_detection_threshold=0.05):
     data = np.loadtxt(photocurrent_file)
     energy = data[:, 0]  # eV
-    photocurrent = data[:, 1]
+    photocurrent = data[:, 1]  # normalized units
     
-    # Average photocurrent below threshold energy (no absorption)
-    mask = energy < energy_threshold
-    I_dark = np.mean(np.abs(photocurrent[mask]))
-    
-    return I_dark
+    threshold_value = peak_detection_threshold * peak_value
 
-def getSelectivityMetric(photocurrent_file, threshold=0.5):
-    data = np.loadtxt(photocurrent_file)
-    energy = data[:, 0]
-    photocurrent = data[:, 1]
-    
-    peak_value = np.max(photocurrent)
-    peak_energy = energy[np.argmax(photocurrent)]
-    
-    # Calculate FWHM (Full Width at Half Maximum)
-    half_max = peak_value * threshold
-    above_half = photocurrent > half_max
-    bandwidth = energy[above_half][-1] - energy[above_half][0] if np.any(above_half) else 0
-    
-    selectivity = peak_value / bandwidth if bandwidth > 0 else 0
-    
-    return selectivity
+    above_threshold =  photocurrent >= threshold_value
 
+    peak_energy_integral = np.trapezoid(photocurrent[above_threshold], energy[above_threshold])
+
+    total_energy_integral = np.trapezoid(np.abs(photocurrent), energy)
+
+    # Calculate average photocurrent below threshold
+    prominence = peak_energy_integral / total_energy_integral if total_energy_integral != 0 else 0
+    
+    return prominence
+
+
+if __name__ == "__main__":
+    dbg()

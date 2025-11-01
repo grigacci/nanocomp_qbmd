@@ -1,0 +1,24 @@
+# config.toml - Configuração para análise QBMD
+
+[paths]
+# Arquivos de entrada
+photocurrent = "Photocurrent_SL.txt"
+wavefunction = "wavefunction_SL.txt"
+transmission = "Transmission_SL.txt"
+potential = "Potencial_SL.txt"
+energy = "Energy_SL.txt"
+
+# Diretório de saída
+output_dir = "./runs/05x2.0_7.0__2.5__01x2.0_5.0/"
+
+[analysis]
+# Parâmetros de análise
+peak_threshold = 0.1  # 0.5% do máximo para identificar região do pico
+
+
+[output]
+# Formato de saída
+save_plots = true
+save_metrics_csv = true
+verbose = true
+decimal_precision = 4
