@@ -1,5 +1,4 @@
 import tomllib  
-import argparse
 from pathlib import Path
 
 def loadConfig(config_path=None):

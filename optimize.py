@@ -4,7 +4,6 @@ Otimização multi-objetivo de detectores QBMD usando NSGA-II.
 
 import numpy as np
 import subprocess
-import shutil
 from pathlib import Path
 from datetime import datetime
 
