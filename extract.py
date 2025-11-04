@@ -1,15 +1,5 @@
 import numpy as np
 from models import SimulationResult
-from config import loadConfig
-
-
-def dbg():
-    """Load the config file"""
-    config = loadConfig("config.toml")
-
-    res =  getSimulationResult(config["paths"]["output_dir"] + config["paths"]["photocurrent"], config["analysis"]["peak_threshold"])
-    print(res)
-
 
 def getSimulationResult(photocurrent_file, peak_detection_threshold=0.05):
     max_energy, max_photocurrent = getMaxPhotocurrent(photocurrent_file)
@@ -77,5 +67,3 @@ def getGetProminenceMetric(photocurrent_file, peak_value, peak_detection_thresho
     return prominence
 
 
-if __name__ == "__main__":
-    dbg()
