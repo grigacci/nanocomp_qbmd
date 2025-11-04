@@ -25,6 +25,10 @@ In Portuguese:
  - [Instalação VSC, Python, Git e como clonar um repositório do GitHub](https://www.youtube.com/watch?v=h8JMfAcHAA8)
  - [Logar na conta de GitHub no VSC e fazer um controle de versões](https://www.youtube.com/watch?v=zItRL5RWc14)
 
+Example: 
+- Plots for Simulation Outputs: 
+[qbmdOptimGA.ipynb](https://github.com/marcotulio956/nano.compQBMD/blob/main/nanocomp/qbmdOptimGA.ipynb)
+
 Authors
 ===
 [Germano M. Penello](github.com/gpenello)  
