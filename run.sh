@@ -7,9 +7,9 @@ SCRIPT_DIR=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
 EXE_PATH="${SCRIPT_DIR}/simu.exe"
 
 # Check if enough arguments are provided
-if [ $# -lt 7 ]; then
-    echo "Usage: $0 <arg1> <arg2> <arg3> <arg4> <arg5> <arg6> <arg7> [base_output_dir]"
-    echo "Example: $0 5 2.0d0 7.0d0 2.5d0 1 2.0d0 7.0d0"
+if [ $# -lt 8 ]; then
+    echo "Usage: $0 <arg1> <arg2> <arg3> <arg4> <arg5> <arg6> <arg7> <output_dir>"
+    echo "Example: $0 5 2.0d0 7.0d0 2.5d0 1 2.0d0 7.0d0 /path/to/output"
     exit 1
 fi
 
@@ -28,29 +28,18 @@ ARG5=$5
 ARG6=$6
 ARG7=$7
 
-# Base output directory (default to temp_files relative to script location, or use 8th argument)
-BASE_OUTPUT_DIR="${8:-${SCRIPT_DIR}/runs}"
+# Use the output directory provided by Python (8th argument)
+OUTPUT_DIR=$(realpath -m "$8")
 
-# Convert to absolute path
-BASE_OUTPUT_DIR=$(realpath -m "$BASE_OUTPUT_DIR")
+# Ensure trailing slash
+if [[ "${OUTPUT_DIR}" != */ ]]; then
+    OUTPUT_DIR="${OUTPUT_DIR}/"
+fi
 
-# Generate folder name from arguments
-# Format: 05x02.0_07.0__02.5__01x02.0_07.0
-FOLDER_NAME=$(printf "%02dx%s_%s__%s__%02dx%s_%s" \
-    "$ARG1" \
-    "$(echo $ARG2 | sed 's/d0//')" \
-    "$(echo $ARG3 | sed 's/d0//')" \
-    "$(echo $ARG4 | sed 's/d0//')" \
-    "$ARG5" \
-    "$(echo $ARG6 | sed 's/d0//')" \
-    "$(echo $ARG7 | sed 's/d0//')")
-
-# Create full output path with trailing slash
-OUTPUT_DIR="${BASE_OUTPUT_DIR}/${FOLDER_NAME}/"
-
-# Create the directory if it doesn't exist
-echo "Creating directory: $OUTPUT_DIR"
-mkdir -p "$OUTPUT_DIR"
+# Create the directory if it doesn't exist (remove trailing slash for mkdir)
+MKDIR_PATH="${OUTPUT_DIR%/}"
+echo "Creating directory: $MKDIR_PATH"
+mkdir -p "$MKDIR_PATH"
 
 # Check if directory was created successfully
 if [ ! -d "$OUTPUT_DIR" ]; then
@@ -73,4 +62,3 @@ else
     echo "Error: Simulation failed with exit code $?"
     exit 1
 fi
-

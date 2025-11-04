@@ -52,7 +52,7 @@ class QBMDOptimizationProblem(Problem):
         """
         self.config = config
         self.simulation_counter = 0
-        self.base_output_dir = Path("./optimization_runs")
+        self.base_output_dir = Path(config["paths"]["output_dir"])
         self.base_output_dir.mkdir(exist_ok=True)
         
         # Definir limites das variáveis
@@ -128,21 +128,29 @@ class QBMDOptimizationProblem(Problem):
         arg5 = int(parameters[4])  # Inteiro
         arg6 = f"{parameters[5]:.1f}d0"
         arg7 = f"{parameters[6]:.1f}d0"
-        
+
+        simulation_path = f"{arg1:02d}x{arg2}_{arg3}_{arg4}_{arg5:02d}x{arg6}_{arg7}"
+
         # Diretório de saída específico para esta simulação
-        output_dir = self.base_output_dir / f"sim_{self.simulation_counter:05d}"
+        output_dir = self.base_output_dir / f"sim_{self.simulation_counter:05d}" / simulation_path
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
         
         # Executar script run.sh
-        script_path = Path(self.config["simulator"]["exec_path"])
+        script_path = self.config["simulator"]["exec_path"]
         
-        try:
-            result = subprocess.run(
-                [
+        args = [
                     str(script_path),
                     str(arg1), arg2, arg3, arg4,
                     str(arg5), arg6, arg7,
                     str(output_dir)
-                ],
+                ]
+        
+        print(f"\n Iniciando simulação {self.simulation_counter} com parâmetros: {args}")
+
+        try:
+            result = subprocess.run(
+                args,
                 capture_output=True,
                 text=True,
                 timeout=self.config["simulator"]["timeout"]
@@ -154,7 +162,7 @@ class QBMDOptimizationProblem(Problem):
                 return self._default_result()
             
             # Extrair métricas do resultado
-            photocurrent_file = output_dir / self.config["paths"]["photocurrent"]
+            photocurrent_file = output_dir / self.config["paths"]["photocurrent"] 
             
             if not photocurrent_file.exists():
                 print(f"  Arquivo não encontrado: {photocurrent_file}")

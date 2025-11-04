@@ -9,7 +9,7 @@ potential = "Potencial_SL.txt"
 energy = "Energy_SL.txt"
 
 # Diretório de saída
-output_dir = "./runs/05x2.0_7.0__2.5__01x2.0_5.0/"
+output_dir = "./runs/"
 
 [analysis]
 # Parâmetros de análise
@@ -20,8 +20,8 @@ exec_path = "./run.sh"
 timeout = 300
 
 [optimization]
-population_size = 50
-num_generations = 100
+population_size = 20
+num_generations = 25
 crossover_prob = 0.9
 mutation_prob = 0.1
 
