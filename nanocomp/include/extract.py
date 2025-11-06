@@ -1,66 +1,83 @@
-import os
-import subprocess
 import numpy as np
-from math import isclose
-from hashlib import sha1
-import json
-import time
+import os
+from .models import SimulationResult
 
-# Optional: use scipy for robust peak detection if installed
+def getSimulationResult(photocurrent_file, peak_detection_threshold=0.05):
+    max_energy, max_photocurrent = getMaxPhotocurrent(photocurrent_file)
+    promience = getGetProminenceMetric(photocurrent_file, max_photocurrent, peak_detection_threshold)
+    quality_factor = getQualityFactorMetric(photocurrent_file, max_photocurrent)
+
+    simuResultObj = SimulationResult(
+        max_energy=max_energy,
+        max_photocurrent=max_photocurrent,
+        prominence=promience,
+        quality_factor=quality_factor
+    )
+
+    return simuResultObj
+
+def getMaxPhotocurrent(photocurrent_file):
+    data = np.loadtxt(photocurrent_file)
+    energy = data[:, 0]  # eV 
+    photocurrent = data[:, 1]  # normalized units
+    
+    max_photocurrent = np.max(photocurrent)
+    max_index = np.argmax(photocurrent)  
+    max_energy = energy[max_index]
+    
+    return max_energy, max_photocurrent
+
+def getQualityFactorMetric(photocurrent_file, peak_value):
+    data = np.loadtxt(photocurrent_file)
+    energy = data[:, 0]  # eV
+    photocurrent = data[:, 1]  # normalized units
+    
+    peak_index = np.argmax(photocurrent)
+    peak_energy = energy[peak_index]
+    
+    half_max = peak_value * 0.5
+    above_half = photocurrent >= half_max
+
+    if np.sum(above_half) < 2:
+        return 0  # Not enough points to define FWHM
+
+    indexes_above_half = np.where(above_half)[0]
+
+    fwhm = energy[indexes_above_half[-1]] - energy[indexes_above_half[0]]
+    
+    Q_factor = peak_energy / fwhm if fwhm != 0 else 0
+    
+    return Q_factor
+
+def getGetProminenceMetric(photocurrent_file, peak_value, peak_detection_threshold=0.05):
+    data = np.loadtxt(photocurrent_file)
+    energy = data[:, 0]  # eV
+    photocurrent = data[:, 1]  # normalized units
+    
+    threshold_value = peak_detection_threshold * peak_value
+
+    above_threshold =  photocurrent >= threshold_value
+
+    peak_energy_integral = np.trapezoid(photocurrent[above_threshold], energy[above_threshold])
+
+    total_energy_integral = np.trapezoid(np.abs(photocurrent), energy)
+
+    # Calculate average photocurrent below threshold
+    prominence = peak_energy_integral / total_energy_integral if total_energy_integral != 0 else 0
+    
+    return prominence
+
+# -----------------------
+# Metrics extraction (used by viz)
+# -----------------------
+
 try:
     from scipy.signal import find_peaks, peak_widths
     SCIPY_AVAILABLE = True
 except Exception:
     SCIPY_AVAILABLE = False
 
-# -----------------------
-# Utilities
-# -----------------------
-def nm_str_from_value(val, as_meters=False, fmt="{:.3f}d0"):
-    """Return Fortran-style value like '2.000d0'.
-       val: if as_meters True, val is in meters -> convert to nm.
-    """
-    if as_meters:
-        val = val * 1e9
-    return fmt.format(val).replace("e","d")  # ensure d0
 
-def run_fortran_sim(exe_path, RW, RQWt_nm, RQBt_nm, MQWt_nm, LW, LQWt_nm, LQBt_nm,
-                    out_folder, timeout=120):
-    """
-    Run Fortran executable with properly formatted args (absolute paths).
-    Returns the output folder path used (string) or raises on error.
-    """
-    out_folder = os.path.abspath(out_folder)
-    os.makedirs(out_folder, exist_ok=True)
-    # Format args: ints and nm->Fortran d0 format
-    args = [
-        str(int(RW)),
-        nm_str_from_value(RQWt_nm, as_meters=False),
-        nm_str_from_value(RQBt_nm, as_meters=False),
-        nm_str_from_value(MQWt_nm, as_meters=False),
-        str(int(LW)),
-        nm_str_from_value(LQWt_nm, as_meters=False),
-        nm_str_from_value(LQBt_nm, as_meters=False),
-        f'"{out_folder}/"'  # ensure trailing slash and quotes (prog might expect quotes)
-    ]
-    # Build command - avoid shell=True for safety; use executable path directly
-    cmd = [os.path.abspath(exe_path)] + args
-    # On some systems the exe may need chmod +x first
-    if not os.access(exe_path, os.X_OK):
-        os.chmod(exe_path, 0o755)
-    # Join as single string only if necessary by your exe; we'll call via subprocess.run with shell=False
-    # Many Fortran exes accept argv normally.
-    try:
-        res = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, shell=False)
-    except Exception as e:
-        raise RuntimeError("Erro ao executar exe: " + str(e))
-    if res.returncode != 0:
-        raise RuntimeError(f"Executável retornou código {res.returncode}. stderr: {res.stderr}")
-    return out_folder
-
-# -----------------------
-# Metrics extraction
-# -----------------------
 def _load_photocurrent_file(path):
     if not os.path.exists(path):
         raise FileNotFoundError(path)
@@ -178,84 +195,3 @@ def extract_metrics_from_photocurrent(filepath, peak_rel_threshold=0.05, half_ma
         "integrated_QE": integrated_QE
     }
 
-# -----------------------
-# High-level: run sim + extract metrics with caching
-# -----------------------
-def params_to_hash(params):
-    """Deterministic hash for caching"""
-    s = json.dumps(params, sort_keys=True).encode('utf-8')
-    return sha1(s).hexdigest()
-
-CACHE_DIR = "./sim_cache"
-os.makedirs(CACHE_DIR, exist_ok=True)
-
-def eval_simulation_with_cache(exe_path, params, base_outdir="./outputs", timeout=120):
-    """
-    params: dict with keys RW,RQWt_nm,RQBt_nm,MQWt_nm,LW,LQWt_nm,LQBt_nm
-    Returns metrics dict
-    """
-    h = params_to_hash(params)
-    cache_file = os.path.join(CACHE_DIR, f"{h}.json")
-    if os.path.exists(cache_file):
-        with open(cache_file, "r") as f:
-            return json.load(f)
-    # build an output folder name unique to this hash
-    out_folder = os.path.join(os.path.abspath(base_outdir), h[:10])
-    # run simulation (may raise)
-    run_fortran_sim(exe_path,
-                    params['RW'], params['RQWt_nm'], params['RQBt_nm'],
-                    params['MQWt_nm'], params['LW'], params['LQWt_nm'], params['LQBt_nm'],
-                    out_folder, timeout=timeout)
-    # read Photocurrent_SL.txt
-    pc_file = os.path.join(out_folder, "Photocurrent_SL.txt")
-    metrics = extract_metrics_from_photocurrent(pc_file)
-    # store extra metadata
-    metrics['params'] = params
-    metrics['out_folder'] = out_folder
-    with open(cache_file, "w") as f:
-        json.dump(metrics, f, default=float)
-    return metrics
-
-# -----------------------
-# Example fitness (weighted, normalized by sample min/max)
-# -----------------------
-def compute_fitness_from_metrics(metrics, normalization_stats=None, weights=None):
-    """Compute scalar fitness. normalization_stats should be dict with min/max observed for each metric.
-       If None, we use heuristic scalers.
-    """
-    # metrics used: peak_value (higher), Q_factor(higher), prominence_ratio(higher), integrated_QE(lower), secondary_peaks_ratio(lower)
-    # fallback normalization:
-    def norm(v, vmin, vmax):
-        if vmax==vmin:
-            return 0.0
-        return (v - vmin) / (vmax - vmin)
-    # heuristic ranges (tune on real data)
-    defaults = {
-        "peak_value": (0.0, 1.0),
-        "Q_factor": (0.0, 100.0),
-        "prominence_ratio": (0.0, 1.0),
-        "integrated_QE": (0.0, 10.0),
-        "secondary_peaks_ratio": (0.0, 5.0)
-    }
-    if normalization_stats is None:
-        normalization_stats = {k:defaults[k] for k in defaults}
-    if weights is None:
-        weights = {"peak_value":0.4, "Q_factor":0.3, "prominence_ratio":0.2,
-                   "integrated_QE":0.05, "secondary_peaks_ratio":0.05}
-    pv = metrics.get("peak_value",0.0)
-    qf = metrics.get("Q_factor",0.0)
-    pr = metrics.get("prominence_ratio",0.0)
-    iq = metrics.get("integrated_QE",0.0)
-    spr = metrics.get("secondary_peaks_ratio",0.0)
-    n_pv = norm(pv, *normalization_stats["peak_value"])
-    n_qf = norm(qf, *normalization_stats["Q_factor"])
-    n_pr = norm(pr, *normalization_stats["prominence_ratio"])
-    n_iq = norm(iq, *normalization_stats["integrated_QE"])  # higher means worse
-    n_spr = norm(spr, *normalization_stats["secondary_peaks_ratio"])
-    # fitness: maximize is better
-    fitness = weights["peak_value"]*n_pv + weights["Q_factor"]*n_qf + weights["prominence_ratio"]*n_pr \
-              - weights["integrated_QE"]*n_iq - weights["secondary_peaks_ratio"]*n_spr
-    # optional: penalize multiple peaks if you want single-peak
-    if metrics.get("num_peaks",0) > 1:
-        fitness *= 0.9  # small penalty (tune)
-    return float(fitness)
