@@ -25,19 +25,22 @@ class QBMDOptimizationProblem(Problem):
     Problema de otimização multi-objetivo para detectores QBMD.
     
     Variáveis de decisão (7 parâmetros do simulador):
-    - ARG1: Número de períodos da primeira estrutura (int)
-    - ARG2: Parâmetro material 1 (float)
-    - ARG3: Parâmetro material 2 (float)
-    - ARG4: Espessura/composição (float)
-    - ARG5: Número de períodos da segunda estrutura (int)
-    - ARG6: Parâmetro material 3 (float)
-    - ARG7: Parâmetro material 4 (float)
+    - RW: Número de poços à esquerda (int)
+    - RQWt: Espessura dos poços quânticos à esquerda (nm) (float)
+    - RQBt: Espessura das barreiras à esquerda (float)
+    - MQWt: Espessura do poço quântico principal (float)
+    - LW: Número de poços à direita (int)
+    - LQWt: Espessura dos poços quânticos à direita (nm) (float)
+    - LQBt: Espessura das barreiras à direita (nm)
     
     Objetivos (maximizar):
     1. Energia do pico principal
     2. Intensidade da fotocorrente
     3. Fator de qualidade
     4. Proeminência do pico
+    
+    Restrições:
+    1. MQWt >= min(RQWt, LQWt) + 2*monocamada
     """
     
     def __init__(self, config, bounds):
@@ -55,15 +58,18 @@ class QBMDOptimizationProblem(Problem):
         self.base_output_dir = Path(config["paths"]["output_dir"])
         self.base_output_dir.mkdir(exist_ok=True)
         
+        # Obter espessura da monocamada da configuração (com valor padrão)
+        self.monolayer_thickness = config["optimization"].get("monolayer_thickness", 0.3)
+        
         # Definir limites das variáveis
         xl = np.array(bounds['lower'])
         xu = np.array(bounds['upper'])
         
-        # 7 variáveis, 4 objetivos, 0 restrições
+        # 7 variáveis, 4 objetivos, 1 restrição
         super().__init__(
             n_var=7,
             n_obj=4,
-            n_ieq_constr=0,
+            n_ieq_constr=1,  
             xl=xl,
             xu=xu
         )
@@ -77,9 +83,10 @@ class QBMDOptimizationProblem(Problem):
         X : array (pop_size, 7)
             Matriz com os indivíduos da população
         out : dict
-            Dicionário para armazenar os objetivos
+            Dicionário para armazenar os objetivos e restrições
         """
         F = []  # Matriz de objetivos
+        G = []  # Matriz de restrições (ADICIONADO)
         
         for idx, individual in enumerate(X):
             # Executar simulação
@@ -95,6 +102,14 @@ class QBMDOptimizationProblem(Problem):
             
             F.append(objectives)
             
+            RW, RQWt, RQBt, MQWt, LW, LQWt, LQBt = individual
+            
+            # Restrição: MQWt >= min(RQWt, LQWt) + 2*monolayer
+            min_lateral_thickness = min(RQWt, LQWt)
+            constraint_value = min_lateral_thickness - MQWt + 2 * self.monolayer_thickness
+            
+            G.append([constraint_value])  # Deve ser uma lista para cada indivíduo
+            
             self.simulation_counter += 1
             
             # Log de progresso
@@ -105,8 +120,10 @@ class QBMDOptimizationProblem(Problem):
                 print(f"  Intensidade: {result.max_photocurrent:.6e}")
                 print(f"  Q: {result.quality_factor:.2f}")
                 print(f"  Proeminência: {result.prominence:.4f}")
+                print(f"  Restrição: {constraint_value:.4f} (deve ser ≤ 0)")  # ADICIONADO
         
         out["F"] = np.array(F)
+        out["G"] = np.array(G)  
     
     def _run_simulation(self, parameters):
         """
@@ -114,35 +131,35 @@ class QBMDOptimizationProblem(Problem):
         
         Parâmetros
         ----------
-        parameters : array [ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7]
+        parameters : array [RW, RQWt, RQBt, MQWt, LW, LQWt, LQBt]
         
         Retorna
         -------
         SimulationResult
         """
+        
         # Converter parâmetros para formato correto
-        arg1 = int(parameters[0])  # Inteiro
-        arg2 = f"{parameters[1]:.1f}d0"  # Formato Fortran
-        arg3 = f"{parameters[2]:.1f}d0"
-        arg4 = f"{parameters[3]:.1f}d0"
-        arg5 = int(parameters[4])  # Inteiro
-        arg6 = f"{parameters[5]:.1f}d0"
-        arg7 = f"{parameters[6]:.1f}d0"
+        RW = int(parameters[0])  # Inteiro
+        RQWt = f"{parameters[1]:.1f}d0"  # Formato Fortran
+        RQBt = f"{parameters[2]:.1f}d0"
+        MQWt = f"{parameters[3]:.1f}d0"
+        LW = int(parameters[4])  # Inteiro
+        LQWt = f"{parameters[5]:.1f}d0"
+        LQBt = f"{parameters[6]:.1f}d0"
 
-        simulation_path = f"{arg1:02d}x{arg2}_{arg3}_{arg4}_{arg5:02d}x{arg6}_{arg7}"
+        simulation_path = f"{RW:02d}x{RQWt}_{RQBt}_{MQWt}_{LW:02d}x{LQWt}_{LQBt}"
 
         # Diretório de saída específico para esta simulação
         output_dir = self.base_output_dir / f"sim_{self.simulation_counter:05d}" / simulation_path
         output_dir.mkdir(parents=True, exist_ok=True)
-        
         
         # Executar script run.sh
         script_path = self.config["simulator"]["exec_path"]
         
         args = [
                     str(script_path),
-                    str(arg1), arg2, arg3, arg4,
-                    str(arg5), arg6, arg7,
+                    str(RW), RQWt, RQBt, MQWt,
+                    str(LW), LQWt, LQBt,
                     str(output_dir)
                 ]
         
@@ -184,7 +201,6 @@ class QBMDOptimizationProblem(Problem):
     
     def _default_result(self):
         """Retorna resultado padrão para simulações falhas"""
-        from models import SimulationResult
         return SimulationResult(
             max_energy=0.0,
             max_photocurrent=0.0,
@@ -199,33 +215,35 @@ def run_optimization():
     # Carregar configuração
     config = loadConfig("config.toml")
     
-    # Definir limites das variáveis
-    # AJUSTE ESTES VALORES DE ACORDO COM SEU PROBLEMA!
+    # Obter bounds do arquivo config.toml
+    bounds_config = config["optimization"]["bounds"]
+    
+    # Construir dicionário de limites na ordem das variáveis:
+    # [RW, RQWt, RQBt, MQWt, LW, LQWt, LQBt]
     bounds = {
         'lower': [
-            1,      # ARG1: mínimo 1 período
-            1.0,    # ARG2: mínimo valor do parâmetro
-            5.0,    # ARG3: mínimo valor do parâmetro
-            1.0,    # ARG4: mínimo espessura
-            1,      # ARG5: mínimo 1 período
-            1.0,    # ARG6: mínimo valor do parâmetro
-            3.0     # ARG7: mínimo valor do parâmetro
+            bounds_config["rw_min"],      # RW: Número de poços à esquerda
+            bounds_config["rqwt_min"],    # RQWt: Espessura dos poços quânticos à esquerda
+            bounds_config["rqbt_min"],    # RQBt: Espessura das barreiras à esquerda
+            bounds_config["mqwt_min"],    # MQWt: Espessura do poço quântico principal
+            bounds_config["lw_min"],      # LW: Número de poços à direita
+            bounds_config["lqwt_min"],    # LQWt: Espessura dos poços quânticos à direita
+            bounds_config["lqbt_min"]     # LQBt: Espessura das barreiras à direita
         ],
         'upper': [
-            10,     # ARG1: máximo 10 períodos
-            5.0,    # ARG2: máximo valor do parâmetro
-            10.0,   # ARG3: máximo valor do parâmetro
-            5.0,    # ARG4: máximo espessura
-            10,     # ARG5: máximo 10 períodos
-            5.0,    # ARG6: máximo valor do parâmetro
-            10.0    # ARG7: máximo valor do parâmetro
+            bounds_config["rw_max"],      # RW: Número de poços à esquerda
+            bounds_config["rqwt_max"],    # RQWt: Espessura dos poços quânticos à esquerda
+            bounds_config["rqbt_max"],    # RQBt: Espessura das barreiras à esquerda
+            bounds_config["mqwt_max"],    # MQWt: Espessura do poço quântico principal
+            bounds_config["lw_max"],      # LW: Número de poços à direita
+            bounds_config["lqwt_max"],    # LQWt: Espessura dos poços quânticos à direita
+            bounds_config["lqbt_max"]     # LQBt: Espessura das barreiras à direita
         ]
     }
     
-    # Criar problema de otimização
+    # Restante do código permanece igual...
     problem = QBMDOptimizationProblem(config=config, bounds=bounds)
     
-    # Configurar NSGA-II
     algorithm = NSGA2(
         pop_size=config["optimization"]["population_size"],
         sampling=FloatRandomSampling(),
@@ -234,16 +252,15 @@ def run_optimization():
         eliminate_duplicates=True
     )
     
-    # Critério de parada
     termination = get_termination("n_gen", config["optimization"]["num_generations"])
     
-    # Executar otimização
     print("="*70)
     print("OTIMIZAÇÃO NSGA-II - QUANTUM BRAGG MIRROR DETECTOR")
     print("="*70)
     print(f"População: {config['optimization']['population_size']}")
     print(f"Gerações: {config['optimization']['num_generations']}")
     print(f"Total de simulações: {config['optimization']['population_size'] * config['optimization']['num_generations']}")
+    print(f"Espessura monocamada: {config['optimization'].get('monolayer_thickness', 0.3)} nm")
     print("="*70)
     
     res = minimize(
@@ -255,22 +272,19 @@ def run_optimization():
         save_history=True
     )
     
-    # Processar resultados
+    # Processar resultados...
     print("\n" + "="*70)
     print("OTIMIZAÇÃO CONCLUÍDA")
     print("="*70)
     print(f"Soluções na Frente de Pareto: {len(res.X)}")
     
-    # Converter objetivos de volta (remover negativo)
+    # Verificar violações de restrição nas soluções finais 
+    violations = res.G.max(axis=0) if hasattr(res, 'G') and res.G is not None else [0]
+    print(f"Máxima violação de restrição: {violations[0]:.6f} (deve ser ≤ 0)")
+    
     pareto_objectives = -res.F
     
-    # Salvar resultados
     save_results(res, pareto_objectives, config)
-    
-    # Mostrar melhores soluções
-    display_best_solutions(res.X, pareto_objectives)
-    
-    # Visualizar Frente de Pareto
     visualize_pareto_front(pareto_objectives)
     
     return res
@@ -290,8 +304,9 @@ def save_results(res, pareto_objectives, config):
         params_file,
         res.X,
         delimiter=",",
-        header="ARG1,ARG2,ARG3,ARG4,ARG5,ARG6,ARG7",
-        comments=""
+        header="rw,RQWt,RQBt,MQWt,LW,LQWt,LQBt",
+        comments="",
+        fmt="%d,%.6f,%.6f,%.6f,%d,%.6f,%.6f"  
     )
     
     # Salvar objetivos
@@ -304,47 +319,41 @@ def save_results(res, pareto_objectives, config):
         comments=""
     )
     
+    # Salvar restrições
+    constraints_file = output_dir / f"pareto_constraints_{timestamp}.csv"
+    if hasattr(res, 'G') and res.G is not None:
+        np.savetxt(
+            constraints_file,
+            res.G,
+            delimiter=",",
+            header="min_lateral_minus_MQWt_plus_2monolayer",
+            comments=""
+        )
+    
     # Salvar resultados combinados
-    combined = np.hstack([res.X, pareto_objectives])
+    if hasattr(res, 'G') and res.G is not None:
+        combined = np.hstack([res.X, pareto_objectives, res.G])
+        header_combined = "rw,RQWt,RQBt,MQWt,LW,LQWt,LQBt,max_energy_eV,max_photocurrent,quality_factor,prominence,constraint"
+    else:
+        combined = np.hstack([res.X, pareto_objectives])
+        header_combined = "rw,RQWt,RQBt,MQWt,LW,LQWt,LQBt,max_energy_eV,max_photocurrent,quality_factor,prominence"
+    
     combined_file = output_dir / f"pareto_full_{timestamp}.csv"
     np.savetxt(
         combined_file,
         combined,
         delimiter=",",
-        header="ARG1,ARG2,ARG3,ARG4,ARG5,ARG6,ARG7,max_energy_eV,max_photocurrent,quality_factor,prominence",
-        comments=""
+        header=header_combined,
+        comments="",
+        fmt="%d,%.6f,%.6f,%.6f,%d,%.6f,%.6f,%.6f,%.6e,%.6f,%.6f,%.6f"
     )
     
     print(f"\n Resultados salvos em: {output_dir}")
     print(f"   - Parâmetros: {params_file.name}")
     print(f"   - Objetivos: {objectives_file.name}")
+    print(f"   - Restrições: {constraints_file.name}")  
     print(f"   - Completo: {combined_file.name}")
 
-
-def display_best_solutions(parameters, objectives):
-    """Mostra as melhores soluções por cada objetivo"""
-    
-    print("\n" + "="*70)
-    print("MELHORES SOLUÇÕES POR OBJETIVO")
-    print("="*70)
-    
-    objective_names = [
-        "Energia do Pico (eV)",
-        "Intensidade da Fotocorrente",
-        "Fator de Qualidade",
-        "Proeminência"
-    ]
-    
-    for i, name in enumerate(objective_names):
-        best_idx = np.argmax(objectives[:, i])
-        
-        print(f"\n🏆 Melhor {name}:")
-        print(f"   Valor: {objectives[best_idx, i]:.6f}")
-        print(f"   Parâmetros: {parameters[best_idx]}")
-        print(f"   Outros objetivos:")
-        for j, obj_name in enumerate(objective_names):
-            if j != i:
-                print(f"     - {obj_name}: {objectives[best_idx, j]:.6f}")
 
 
 def visualize_pareto_front(objectives):
@@ -386,7 +395,7 @@ def visualize_pareto_front(objectives):
     
     output_file = 'pareto_front_projections.png'
     plt.savefig(output_file, dpi=300, bbox_inches='tight')
-    print(f"\n📊 Visualização da Frente de Pareto salva: {output_file}")
+    print(f"\n Visualização da Frente de Pareto salva: {output_file}")
     
     plt.close()
 
