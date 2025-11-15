@@ -3,9 +3,15 @@ import numpy as np
 import plotly.express as px
 import seaborn as sns
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 # 1) Load and keep feasible points
-df = pd.read_csv('optimization_results/pareto_full_20251114_154601.csv')
+res_dir = Path("results")
+files = sorted(res_dir.glob("pareto_full*.csv"))
+
+csv_path = files[-1]
+
+df = pd.read_csv(csv_path)
 df_feas = df[df['constraint'] <= 0].copy()
 
 # 2) Interactive scatter (energy vs photocurrent)
