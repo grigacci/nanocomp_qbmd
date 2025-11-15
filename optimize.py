@@ -1,6 +1,8 @@
 """
 Otimização multi-objetivo de detectores QBMD usando NSGA-II.
 """
+import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
 import subprocess
@@ -14,6 +16,7 @@ from pymoo.operators.crossover.sbx import SBX
 from pymoo.operators.mutation.pm import PM
 from pymoo.operators.sampling.rnd import FloatRandomSampling
 from pymoo.termination import get_termination
+
 
 from config import loadConfig
 from extract import getSimulationResult
@@ -73,7 +76,51 @@ class QBMDOptimizationProblem(Problem):
             xl=xl,
             xu=xu
         )
+
+    def _run_simulation_with_id(self, sim_id, individual):
+        # Build a unique per-sim output path using sim_id (not a shared counter)
+        RW = int(individual[0])
+        RQWt = f"{individual[1]:.1f}d0"
+        RQBt = f"{individual[2]:.1f}d0"
+        MQWt = f"{individual[3]:.1f}d0"
+        LW = int(individual[4])
+        LQWt = f"{individual[5]:.1f}d0"
+        LQBt = f"{individual[6]:.1f}d0"
+        simulation_path = f"{RW:02d}x{RQWt}_{RQBt}_{MQWt}_{LW:02d}x{LQWt}_{LQBt}"
+        output_dir = self.base_output_dir / f"sim_{sim_id:05d}" / simulation_path
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Optional: set OpenMP/BLAS threads to avoid oversubscription
+        env = os.environ.copy()
+        omp = str(self.config["simulator"].get("omp_threads", 1))
+        env.setdefault("OMP_NUM_THREADS", omp)
+        env.setdefault("OPENBLAS_NUM_THREADS", "1")
+        env.setdefault("MKL_NUM_THREADS", "1")
+
+        args = [
+            str(self.config["simulator"]["exec_path"]),
+            str(RW), RQWt, RQBt, MQWt,
+            str(LW), LQWt, LQBt,
+            str(output_dir)
+        ]
+        try:
+            result = subprocess.run(
+                args, capture_output=True, text=True,
+                timeout=self.config["simulator"]["timeout"], env=env
+            )
+            if result.returncode != 0:
+                return self._default_result(), individual
+            photocurrent_file = output_dir / self.config["paths"]["photocurrent"]
+            if not photocurrent_file.exists():
+                return self._default_result(), individual
+            simr = getSimulationResult(str(photocurrent_file),
+                                    self.config["analysis"]["peak_threshold"])
+            return simr, individual
+        except Exception:
+            return self._default_result(), individual
+
     
+     
     def _evaluate(self, X, out, *args, **kwargs):
         """
         Avalia a população de soluções.
@@ -85,45 +132,27 @@ class QBMDOptimizationProblem(Problem):
         out : dict
             Dicionário para armazenar os objetivos e restrições
         """
-        F = []  # Matriz de objetivos
-        G = []  # Matriz de restrições (ADICIONADO)
-        
-        for idx, individual in enumerate(X):
-            # Executar simulação
-            result = self._run_simulation(individual)
-            
-            # NSGA-II minimiza, então negamos para maximizar
-            objectives = [
-                -result.max_energy,          # Maximizar energia do pico
-                -result.max_photocurrent,    # Maximizar intensidade
-                -result.quality_factor,      # Maximizar fator de qualidade
-                -result.prominence           # Maximizar proeminência
-            ]
-            
-            F.append(objectives)
-            
-            RW, RQWt, RQBt, MQWt, LW, LQWt, LQBt = individual
-            
-            # Restrição: MQWt >= min(RQWt, LQWt) + 2*monolayer
-            min_lateral_thickness = min(RQWt, LQWt)
-            constraint_value = min_lateral_thickness - MQWt + 2 * self.monolayer_thickness
-            
-            G.append([constraint_value])  # Deve ser uma lista para cada indivíduo
-            
-            self.simulation_counter += 1
-            
-            # Log de progresso
-            if self.simulation_counter % 5 == 0:
-                print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Simulação {self.simulation_counter}")
-                print(f"  Parâmetros: {individual}")
-                print(f"  Energia: {result.max_energy:.2f} eV")
-                print(f"  Intensidade: {result.max_photocurrent:.6e}")
-                print(f"  Q: {result.quality_factor:.2f}")
-                print(f"  Proeminência: {result.prominence:.4f}")
-                print(f"  Restrição: {constraint_value:.4f} (deve ser ≤ 0)")  # ADICIONADO
-        
+        n = len(X)
+        start_id = self.simulation_counter + 1
+        sim_ids = [start_id + i for i in range(n)]
+        F, G = [None]*n, [None]*n
+    
+        # Pool size from config or CPU
+        max_workers = int(self.config["optimization"].get("n_workers", os.cpu_count()))
+        with ThreadPoolExecutor(max_workers=max_workers) as ex:
+            futures = {ex.submit(self._run_simulation_with_id, sim_ids[i], X[i]): i for i in range(n)}
+            for fut in as_completed(futures):
+                i = futures[fut]
+                res, individual = fut.result()
+                obj = [-res.max_energy, -res.max_photocurrent, -res.quality_factor, -res.prominence]
+                RW, RQWt, RQBt, MQWt, LW, LQWt, LQBt = individual
+                constraint_value = min(RQWt, LQWt) - MQWt + 2 * self.monolayer_thickness
+                F[i] = obj
+                G[i] = [constraint_value]
+    
+        self.simulation_counter += n
         out["F"] = np.array(F)
-        out["G"] = np.array(G)  
+        out["G"] = np.array(G) 
     
     def _run_simulation(self, parameters):
         """
