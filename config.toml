@@ -10,18 +10,19 @@ energy = "Energy_SL.txt"
 
 # Diretório de saída
 output_dir = "./runs/"
+result_dir = "./results"
 
 [analysis]
 # Parâmetros de análise
-peak_threshold = 0.1  # 0.5% do máximo para identificar região do pico
+peak_threshold = 0.10  
 
 [simulator]
 exec_path = "./run.sh"
 timeout = 300
 
 [optimization]
-population_size = 25
-num_generations = 50
+population_size = 30
+num_generations = 20
 crossover_prob = 0.9
 mutation_prob = 0.1
 monolayer_thickness = 0.293

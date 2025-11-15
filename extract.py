@@ -1,69 +1,107 @@
 import numpy as np
+from scipy.signal import find_peaks, peak_prominences
 from models import SimulationResult
 
-def getSimulationResult(photocurrent_file, peak_detection_threshold=0.05):
-    max_energy, max_photocurrent = getMaxPhotocurrent(photocurrent_file)
-    promience = getGetProminenceMetric(photocurrent_file, max_photocurrent, peak_detection_threshold)
-    quality_factor = getQualityFactorMetric(photocurrent_file, max_photocurrent)
+# Physical constants
+H_C = 1240.0  # eV·nm (Planck constant × speed of light)
 
-    simuResultObj = SimulationResult(
-        max_energy=max_energy,
-        max_photocurrent=max_photocurrent,
-        prominence=promience,
-        quality_factor=quality_factor
+def getSimulationResult(photocurrent_file, peak_detection_threshold=0.05):
+    """Extract metrics from photocurrent vs wavelength data."""
+    
+    # Load and validate data
+    data = np.loadtxt(photocurrent_file)
+    if data.size == 0:
+        return _default_result()
+    
+    # Convert wavelength (nm) to energy (eV)
+    wavelength_nm = data[:, 0]
+    energy_ev = H_C / wavelength_nm
+    
+    # Handle signed photocurrent (take absolute value if all negative)
+    photocurrent_raw = data[:, 1]
+    if np.all(photocurrent_raw < 0):
+        photocurrent = np.abs(photocurrent_raw)
+    else:
+        photocurrent = photocurrent_raw
+    
+    # Normalize photocurrent for consistent metric calculation
+    photocurrent = photocurrent / np.max(photocurrent) if np.max(photocurrent) > 0 else photocurrent
+    
+    # Find the global peak
+    peak_idx = np.argmax(photocurrent)
+    
+    # Calculate robust metrics
+    prominence = calculate_prominence(energy_ev, photocurrent, peak_idx)
+    q_factor = calculate_q_factor(energy_ev, photocurrent, peak_idx)
+    
+    return SimulationResult(
+        max_energy=energy_ev[peak_idx],
+        max_photocurrent=np.max(photocurrent_raw),  # Store raw intensity
+        prominence=prominence,
+        quality_factor=q_factor
     )
 
-    return simuResultObj
-
-def getMaxPhotocurrent(photocurrent_file):
-    data = np.loadtxt(photocurrent_file)
-    energy = data[:, 0]  # eV 
-    photocurrent = data[:, 1]  # normalized units
+def calculate_q_factor(energy, photocurrent, peak_idx):
+    """Calculate Q-factor with proper interpolation at boundaries."""
     
-    max_photocurrent = np.max(photocurrent)
-    max_index = np.argmax(photocurrent)  
-    max_energy = energy[max_index]
-    
-    return max_energy, max_photocurrent
-
-def getQualityFactorMetric(photocurrent_file, peak_value):
-    data = np.loadtxt(photocurrent_file)
-    energy = data[:, 0]  # eV
-    photocurrent = data[:, 1]  # normalized units
-    
-    peak_index = np.argmax(photocurrent)
-    peak_energy = energy[peak_index]
-    
+    peak_value = photocurrent[peak_idx]
     half_max = peak_value * 0.5
-    above_half = photocurrent >= half_max
-
-    if np.sum(above_half) < 2:
-        return 0  # Not enough points to define FWHM
-
-    indexes_above_half = np.where(above_half)[0]
-
-    fwhm = energy[indexes_above_half[-1]] - energy[indexes_above_half[0]]
     
-    Q_factor = peak_energy / fwhm if fwhm != 0 else 0
+    # Find left boundary with interpolation
+    left_idx = peak_idx
+    while left_idx > 0 and photocurrent[left_idx] >= half_max:
+        left_idx -= 1
     
-    return Q_factor
-
-def getGetProminenceMetric(photocurrent_file, peak_value, peak_detection_threshold=0.05):
-    data = np.loadtxt(photocurrent_file)
-    energy = data[:, 0]  # eV
-    photocurrent = data[:, 1]  # normalized units
+    if left_idx == peak_idx or left_idx == len(energy) - 1:
+        return 0.0  # No width found
     
-    threshold_value = peak_detection_threshold * peak_value
-
-    above_threshold =  photocurrent >= threshold_value
-
-    peak_energy_integral = np.trapezoid(photocurrent[above_threshold], energy[above_threshold])
-
-    total_energy_integral = np.trapezoid(np.abs(photocurrent), energy)
-
-    # Calculate average photocurrent below threshold
-    prominence = peak_energy_integral / total_energy_integral if total_energy_integral != 0 else 0
+    # Linear interpolation for precise left crossing point
+    x1, x2 = energy[left_idx], energy[left_idx + 1]
+    y1, y2 = photocurrent[left_idx], photocurrent[left_idx + 1]
+    left_energy = x2 - (x2 - x1) * (y2 - half_max) / (y2 - y1)
     
-    return prominence
+    # Find right boundary with interpolation
+    right_idx = peak_idx
+    while right_idx < len(photocurrent) - 1 and photocurrent[right_idx] >= half_max:
+        right_idx += 1
+    
+    if right_idx == peak_idx or right_idx == 0:
+        return 0.0  # No width found
+    
+    # Linear interpolation for precise right crossing point
+    x1, x2 = energy[right_idx - 1], energy[right_idx]
+    y1, y2 = photocurrent[right_idx - 1], photocurrent[right_idx]
+    right_energy = x1 + (x2 - x1) * (half_max - y1) / (y2 - y1)
+    
+    fwhm = right_energy - left_energy
+    
+    if fwhm <= 0:
+        return 0.0
+    
+    return energy[peak_idx] / fwhm
 
+def calculate_prominence(energy, photocurrent, peak_idx):
+    """Calculate true prominence using scipy for accuracy."""
+    
+    # Find all peaks
+    peaks, _ = find_peaks(photocurrent)
+    
+    if len(peaks) == 0:
+        return 0.0
+    
+    # Find the peak closest to our main peak
+    peak_distances = np.abs(peaks - peak_idx)
+    main_peak_in_peaks = np.argmin(peak_distances)
+    
+    prominences = peak_prominences(photocurrent, peaks)[0]
+    
+    return prominences[main_peak_in_peaks]
 
+def _default_result():
+    """Return safe defaults for failed extractions."""
+    return SimulationResult(
+        max_energy=0.0,
+        max_photocurrent=0.0,
+        prominence=0.0,
+        quality_factor=0.0
+    )

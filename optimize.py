@@ -285,7 +285,6 @@ def run_optimization():
     pareto_objectives = -res.F
     
     save_results(res, pareto_objectives, config)
-    visualize_pareto_front(pareto_objectives)
     
     return res
 
@@ -293,7 +292,9 @@ def run_optimization():
 def save_results(res, pareto_objectives, config):
     """Salva os resultados da otimização"""
     
-    output_dir = Path("./optimization_results")
+    config_paths = config["paths"]["result_dir"]
+
+    output_dir = Path(config_paths)
     output_dir.mkdir(exist_ok=True)
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -304,7 +305,7 @@ def save_results(res, pareto_objectives, config):
         params_file,
         res.X,
         delimiter=",",
-        header="rw,RQWt,RQBt,MQWt,LW,LQWt,LQBt",
+        header="RW,RQWt,RQBt,MQWt,LW,LQWt,LQBt",
         comments="",
         fmt="%d,%.6f,%.6f,%.6f,%d,%.6f,%.6f"  
     )
@@ -333,10 +334,10 @@ def save_results(res, pareto_objectives, config):
     # Salvar resultados combinados
     if hasattr(res, 'G') and res.G is not None:
         combined = np.hstack([res.X, pareto_objectives, res.G])
-        header_combined = "rw,RQWt,RQBt,MQWt,LW,LQWt,LQBt,max_energy_eV,max_photocurrent,quality_factor,prominence,constraint"
+        header_combined = "RW,RQWt,RQBt,MQWt,LW,LQWt,LQBt,max_energy_eV,max_photocurrent,quality_factor,prominence,constraint"
     else:
         combined = np.hstack([res.X, pareto_objectives])
-        header_combined = "rw,RQWt,RQBt,MQWt,LW,LQWt,LQBt,max_energy_eV,max_photocurrent,quality_factor,prominence"
+        header_combined = "RW,RQWt,RQBt,MQWt,LW,LQWt,LQBt,max_energy_eV,max_photocurrent,quality_factor,prominence"
     
     combined_file = output_dir / f"pareto_full_{timestamp}.csv"
     np.savetxt(
@@ -356,48 +357,6 @@ def save_results(res, pareto_objectives, config):
 
 
 
-def visualize_pareto_front(objectives):
-    """Visualiza projeções 2D da Frente de Pareto"""
-    import matplotlib.pyplot as plt
-    
-    labels = [
-        "Energia do Pico (eV)",
-        "Intensidade",
-        "Fator de Qualidade",
-        "Proeminência"
-    ]
-    
-    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-    axes = axes.flatten()
-    
-    # Todas as combinações de pares
-    pairs = [
-        (0, 1), (0, 2), (0, 3),
-        (1, 2), (1, 3), (2, 3)
-    ]
-    
-    for idx, (i, j) in enumerate(pairs):
-        axes[idx].scatter(
-            objectives[:, i], 
-            objectives[:, j], 
-            c='red', 
-            alpha=0.6,
-            s=50,
-            edgecolors='black',
-            linewidth=0.5
-        )
-        axes[idx].set_xlabel(labels[i], fontsize=11, fontweight='bold')
-        axes[idx].set_ylabel(labels[j], fontsize=11, fontweight='bold')
-        axes[idx].grid(True, alpha=0.3)
-        axes[idx].set_title(f"{labels[i]} vs {labels[j]}", fontsize=10)
-    
-    plt.tight_layout()
-    
-    output_file = 'pareto_front_projections.png'
-    plt.savefig(output_file, dpi=300, bbox_inches='tight')
-    print(f"\n Visualização da Frente de Pareto salva: {output_file}")
-    
-    plt.close()
 
 
 if __name__ == "__main__":
