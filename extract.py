@@ -1,84 +1,143 @@
 import numpy as np
-from scipy.signal import find_peaks, peak_prominences
+from scipy.signal import find_peaks, peak_prominences, peak_widths
 from models import SimulationResult
+import warnings
+import os
 
 # Physical constants
 H_C = 1240.0  # eV·nm (Planck constant × speed of light)
+PEAK_MARGIN = 0.05  # Fractional margin to consider peak "near edge"
 
+
+# In extract.py
 def getSimulationResult(photocurrent_file, peak_detection_threshold=0.05):
-    """Extract metrics from photocurrent vs wavelength data."""
+    """Extract metrics with zero-data detection."""
     
-    # Load and validate data
-    data = np.loadtxt(photocurrent_file)
-    if data.size == 0:
-        return _default_result()
+    if not os.path.exists(photocurrent_file):
+        raise FileNotFoundError(f"File missing: {photocurrent_file}")
     
-    # Convert wavelength (nm) to energy (eV)
+    if os.path.getsize(photocurrent_file) == 0:
+        raise ValueError(f"File empty: {photocurrent_file}")
+    
+    try:
+        data = np.loadtxt(photocurrent_file)
+    except:
+        raise ValueError(f"Invalid file format: {photocurrent_file}")
+    
+    if data.size == 0 or len(data.shape) != 2 or data.shape[1] < 2:
+        raise ValueError(f"Invalid data shape: {data.shape}")
+    
     wavelength_nm = data[:, 0]
     energy_ev = H_C / wavelength_nm
     
-    # Handle signed photocurrent (take absolute value if all negative)
-    photocurrent_raw = data[:, 1]
-    if np.all(photocurrent_raw < 0):
-        photocurrent = np.abs(photocurrent_raw)
-    else:
-        photocurrent = photocurrent_raw
+    photocurrent_raw = np.abs(data[:, 1])
     
-    # Normalize photocurrent for consistent metric calculation
-    photocurrent = photocurrent / np.max(photocurrent) if np.max(photocurrent) > 0 else photocurrent
+    # Check if all values are zero
+    if np.max(np.abs(photocurrent_raw)) < 1e-15:
+        raise ValueError(f"All photocurrent values are zero")
     
-    # Find the global peak
+    # Normalize safely
+    max_pc = np.max(photocurrent_raw)
+    if max_pc == 0:
+        raise ValueError("Max photocurrent is zero")
+    
+    photocurrent = photocurrent_raw / max_pc
+    
+    # Find peak
     peak_idx = np.argmax(photocurrent)
     
-    # Calculate robust metrics
+    
+    # Calculate metrics
     prominence = calculate_prominence(energy_ev, photocurrent, peak_idx)
     q_factor = calculate_q_factor(energy_ev, photocurrent, peak_idx)
     
     return SimulationResult(
         max_energy=energy_ev[peak_idx],
-        max_photocurrent=np.max(photocurrent_raw),  # Store raw intensity
+        max_photocurrent=np.max(photocurrent_raw),
         prominence=prominence,
         quality_factor=q_factor
     )
 
+
+# In extract.py
 def calculate_q_factor(energy, photocurrent, peak_idx):
-    """Calculate Q-factor with proper interpolation at boundaries."""
+    """
+    Calculate Q-factor using scipy's robust peak_widths.
+    Returns 0.0 for any invalid or suspicious case.
+    """
     
-    peak_value = photocurrent[peak_idx]
-    half_max = peak_value * 0.5
+    n_points = len(photocurrent)
     
-    # Find left boundary with interpolation
-    left_idx = peak_idx
-    while left_idx > 0 and photocurrent[left_idx] >= half_max:
-        left_idx -= 1
-    
-    if left_idx == peak_idx or left_idx == len(energy) - 1:
-        return 0.0  # No width found
-    
-    # Linear interpolation for precise left crossing point
-    x1, x2 = energy[left_idx], energy[left_idx + 1]
-    y1, y2 = photocurrent[left_idx], photocurrent[left_idx + 1]
-    left_energy = x2 - (x2 - x1) * (y2 - half_max) / (y2 - y1)
-    
-    # Find right boundary with interpolation
-    right_idx = peak_idx
-    while right_idx < len(photocurrent) - 1 and photocurrent[right_idx] >= half_max:
-        right_idx += 1
-    
-    if right_idx == peak_idx or right_idx == 0:
-        return 0.0  # No width found
-    
-    # Linear interpolation for precise right crossing point
-    x1, x2 = energy[right_idx - 1], energy[right_idx]
-    y1, y2 = photocurrent[right_idx - 1], photocurrent[right_idx]
-    right_energy = x1 + (x2 - x1) * (half_max - y1) / (y2 - y1)
-    
-    fwhm = right_energy - left_energy
-    
-    if fwhm <= 0:
+    # --- STRICT: Peak must be in middle 80% ---
+    # Increase margin to 15% to be safer
+    if peak_idx < n_points * PEAK_MARGIN or peak_idx > n_points * (1 - PEAK_MARGIN):
+        print(f"  ❌ Peak at index {peak_idx}/{n_points} is forbidden (edge region)")
         return 0.0
     
-    return energy[peak_idx] / fwhm
+    # --- Use scipy's robust interpolation ---
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        try:
+            # rel_height=0.5 for half-maximum
+            results = peak_widths(
+                photocurrent, 
+                [peak_idx], 
+                rel_height=0.5
+            )
+            
+            # Unpack results
+            width_index = results[0][0]      # Width in index units
+            height = results[1][0]           # Height at half-max
+            left_ip = results[2][0]          # Left interpolation point (sub-sample)
+            right_ip = results[3][0]         # Right interpolation point (sub-sample)
+            
+            # --- VALIDATE INTERPOLATION RESULTS ---
+            
+            # Check for zero/invalid width
+            if width_index <= 0.5:
+                print(f"  ❌ peak_widths found zero width ({width_index:.3f} samples)")
+                return 0.0
+            
+            # Check interpolation points are in valid range
+            if left_ip < 0 or right_ip > n_points - 1:
+                print(f"  ❌ Interpolation point out of bounds: L={left_ip:.1f}, R={right_ip:.1f}")
+                return 0.0
+            
+            # --- Convert to energy units ---
+            # Use np.interp for accurate sub-sample interpolation
+            left_energy = np.interp(left_ip, np.arange(n_points), energy)
+            right_energy = np.interp(right_ip, np.arange(n_points), energy)
+            
+            fwhm = right_energy - left_energy
+            
+            # --- FINAL VALIDATION ---
+            if fwhm <= 0:
+                print(f"  ❌ NEGATIVE FWHM: {fwhm:.6f} eV")
+                print(f"      Left={left_energy:.3f} eV, Right={right_energy:.3f} eV")
+                print(f"      This is a numerical artifact - returning 0.0")
+                return 0.0
+            
+            # Sanity: FWHM should be less than 30% of spectrum range
+            total_range = energy[-1] - energy[0]
+            if fwhm > total_range * 0.3:
+                print(f"  ❌ FWHM ({fwhm:.3f} eV) > 30% of spectrum range")
+                return 0.0
+            
+            # Calculate Q-factor
+            q_factor = energy[peak_idx] / fwhm
+            
+            # Cap to reasonable range
+            if q_factor > 5000:
+                print(f"  ⚠️  Capping Q-factor from {q_factor:.0f} to 500")
+                q_factor = 500.0
+            
+            print(f"  ✅ Q-factor: {q_factor:.2f} (E={energy[peak_idx]:.3f} eV, FWHM={fwhm:.4f} eV)")
+            return q_factor
+            
+        except Exception as e:
+            print(f"  ❌ peak_widths failed: {e}")
+            return 0.0
 
 def calculate_prominence(energy, photocurrent, peak_idx):
     """Calculate true prominence using scipy for accuracy."""
@@ -105,3 +164,4 @@ def _default_result():
         prominence=0.0,
         quality_factor=0.0
     )
+

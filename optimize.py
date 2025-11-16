@@ -78,7 +78,9 @@ class QBMDOptimizationProblem(Problem):
         )
 
     def _run_simulation_with_id(self, sim_id, individual):
-        # Build a unique per-sim output path using sim_id (not a shared counter)
+        """Run simulation and return result or None on failure."""
+        
+        # Build parameters
         RW = int(individual[0])
         RQWt = f"{individual[1]:.1f}d0"
         RQBt = f"{individual[2]:.1f}d0"
@@ -86,73 +88,131 @@ class QBMDOptimizationProblem(Problem):
         LW = int(individual[4])
         LQWt = f"{individual[5]:.1f}d0"
         LQBt = f"{individual[6]:.1f}d0"
+        
         simulation_path = f"{RW:02d}x{RQWt}_{RQBt}_{MQWt}_{LW:02d}x{LQWt}_{LQBt}"
         output_dir = self.base_output_dir / f"sim_{sim_id:05d}" / simulation_path
         output_dir.mkdir(parents=True, exist_ok=True)
-
-        # Optional: set OpenMP/BLAS threads to avoid oversubscription
+        
+        # Set environment variables
         env = os.environ.copy()
         omp = str(self.config["simulator"].get("omp_threads", 1))
         env.setdefault("OMP_NUM_THREADS", omp)
         env.setdefault("OPENBLAS_NUM_THREADS", "1")
         env.setdefault("MKL_NUM_THREADS", "1")
-
+        
         args = [
             str(self.config["simulator"]["exec_path"]),
             str(RW), RQWt, RQBt, MQWt,
             str(LW), LQWt, LQBt,
             str(output_dir)
         ]
+        
         try:
+            # Run simulator
             result = subprocess.run(
                 args, capture_output=True, text=True,
                 timeout=self.config["simulator"]["timeout"], env=env
             )
+            
+            # Check return code
             if result.returncode != 0:
-                return self._default_result(), individual
+                print(f"\n❌ sim_{sim_id:05d}: Simulator failed with code {result.returncode}")
+                print(f"   Error: {result.stderr[:200]}")
+                return None, individual
+            
+            # Check output file
             photocurrent_file = output_dir / self.config["paths"]["photocurrent"]
             if not photocurrent_file.exists():
-                return self._default_result(), individual
+                print(f"\n❌ sim_{sim_id:05d}: Output file missing")
+                return None, individual
+            
+            # Extract metrics (will raise exception if file is empty/corrupt)
             simr = getSimulationResult(str(photocurrent_file),
                                     self.config["analysis"]["peak_threshold"])
+            
+            print(f"\n✅ sim_{sim_id:05d}: Success (E={simr.max_energy:.3f} eV, Q={simr.quality_factor:.2f})")
             return simr, individual
-        except Exception:
-            return self._default_result(), individual
+            
+        except subprocess.TimeoutExpired:
+            print(f"\n❌ sim_{sim_id:05d}: TIMEOUT after {self.config['simulator']['timeout']}s")
+            return None, individual
+        except Exception as e:
+            print(f"\n❌ sim_{sim_id:05d}: {str(e)[:100]}")
+            return None, individual
 
-    
-     
     def _evaluate(self, X, out, *args, **kwargs):
         """
-        Avalia a população de soluções.
-        
-        Parâmetros
-        ----------
-        X : array (pop_size, 7)
-            Matriz com os indivíduos da população
-        out : dict
-            Dicionário para armazenar os objetivos e restrições
+        Evaluate population with guaranteed no crashes.
+        Returns proper penalty values for failures.
         """
+        
         n = len(X)
         start_id = self.simulation_counter + 1
-        sim_ids = [start_id + i for i in range(n)]
-        F, G = [None]*n, [None]*n
-    
-        # Pool size from config or CPU
-        max_workers = int(self.config["optimization"].get("n_workers", os.cpu_count()))
+        
+        # Initialize with proper penalty values
+        # For MAXIMIZATION in pymoo, we MINIMIZE negative objectives
+        # Penalty = very small negative values (close to zero = bad)
+        F = np.full((n, 4), 0.0, dtype=float)  # Will set to -1e-6 for failures
+        G = np.full((n, 1), 0.0, dtype=float)  # Constraint: 0 = satisfied
+        
+        # Track failures
+        failed_ids = []
+        
+        # Run simulations
+        max_workers = int(self.config["optimization"].get("n_workers", 1))  # Reduce to 1 for debugging
         with ThreadPoolExecutor(max_workers=max_workers) as ex:
-            futures = {ex.submit(self._run_simulation_with_id, sim_ids[i], X[i]): i for i in range(n)}
+            futures = {ex.submit(self._run_simulation_with_id, start_id + i, X[i]): i 
+                    for i in range(n)}
+            
             for fut in as_completed(futures):
                 i = futures[fut]
-                res, individual = fut.result()
-                obj = [-res.max_energy, -res.max_photocurrent, -res.quality_factor, -res.prominence]
-                RW, RQWt, RQBt, MQWt, LW, LQWt, LQBt = individual
-                constraint_value = min(RQWt, LQWt) - MQWt + 2 * self.monolayer_thickness
-                F[i] = obj
-                G[i] = [constraint_value]
-    
+                sim_id = start_id + i
+                
+                try:
+                    # --- GET RESULT ---
+                    result = fut.result(timeout=60)
+                    
+                    if result is None:
+                        # Simulator or validation failed
+                        failed_ids.append(sim_id)
+                        F[i] = [-1e-6, -1e-6, -1e-6, -1e-6]  # Penalty
+                        G[i] = [1e6]  # Violate constraint
+                        continue
+                    
+                    res, individual = result
+                    
+                    # Check if result is valid
+                    if not hasattr(res, 'max_energy') or res.max_energy > 1000:
+                        failed_ids.append(sim_id)
+                        F[i] = [-1e-6, -1e-6, -1e-6, -1e-6]
+                        G[i] = [1e6]
+                        continue
+                    
+                    # --- SUCCESS: Calculate real objectives ---
+                    # Note: quality_factor now holds sharpness
+                    F[i] = [-res.max_energy, -res.max_photocurrent, 
+                        -res.quality_factor, -res.prominence]
+                    
+                    # Real constraint
+                    RW, RQWt, RQBt, MQWt, LW, LQWt, LQBt = individual
+                    G[i] = [min(RQWt, LQWt) - MQWt + 2 * self.monolayer_thickness]
+                    
+                    print(f"  sim_{sim_id:05d}: OK (E={res.max_energy:.3f}, Q={res.quality_factor:.2f})")
+                    
+                except Exception as e:
+                    print(f"  sim_{sim_id:05d}: EXCEPTION - {e}")
+                    failed_ids.append(sim_id)
+                    F[i] = [-1e-6, -1e-6, -1e-6, -1e-6]
+                    G[i] = [1e6]
+        
         self.simulation_counter += n
-        out["F"] = np.array(F)
-        out["G"] = np.array(G) 
+        
+        # Report
+        if failed_ids:
+            print(f"\n⚠️  {len(failed_ids)}/{n} failed ({len(failed_ids)/n*100:.1f}%)")
+        
+        out["F"] = F
+        out["G"] = G
     
     def _run_simulation(self, parameters):
         """
