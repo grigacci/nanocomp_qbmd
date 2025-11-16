@@ -159,7 +159,7 @@ class QBMDOptimizationProblem(Problem):
         failed_ids = []
         
         # Run simulations
-        max_workers = int(self.config["optimization"].get("n_workers", 1))  # Reduce to 1 for debugging
+        max_workers = int(self.config["optimization"].get("n_workers", os.cpu_count()))
         with ThreadPoolExecutor(max_workers=max_workers) as ex:
             futures = {ex.submit(self._run_simulation_with_id, start_id + i, X[i]): i 
                     for i in range(n)}
