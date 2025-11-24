@@ -1,10 +1,11 @@
 /runs
 .venv
-/__pycache__
 *.pyc
 *.pyo
 *.pyd
 *.png
 /optimization_results
 /optimization_results_bak
+/results
+/__pycache__
 .envrc

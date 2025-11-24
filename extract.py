@@ -7,6 +7,8 @@ import os
 # Physical constants
 H_C = 1240.0  # eV·nm (Planck constant × speed of light)
 PEAK_MARGIN = 0.05  # Fractional margin to consider peak "near edge"
+MIN_SNR = 10.0  # Minimum signal-to-noise ratio to consider a valid peak
+MIN_CURRENT_THRESHOLD = 1e-15  # Threshold to consider photocurrent as non-zero
 
 
 # In extract.py
@@ -33,7 +35,7 @@ def getSimulationResult(photocurrent_file, peak_detection_threshold=0.05):
     photocurrent_raw = np.abs(data[:, 1])
     
     # Check if all values are zero
-    if np.max(np.abs(photocurrent_raw)) < 1e-15:
+    if np.max(np.abs(photocurrent_raw)) < MIN_CURRENT_THRESHOLD:
         raise ValueError(f"All photocurrent values are zero")
     
     # Normalize safely
@@ -45,6 +47,21 @@ def getSimulationResult(photocurrent_file, peak_detection_threshold=0.05):
     
     # Find peak
     peak_idx = np.argmax(photocurrent)
+
+    noise_level = np.median(np.abs(photocurrent_raw))
+    if noise_level == 0:
+        noise_level = 1e-30
+
+    snr = max_pc / noise_level
+    if snr < MIN_SNR:
+    # not a real peak, treat as no resonance
+        return SimulationResult(
+            maxenergy=energy_ev[peak_idx],
+            maxphotocurrent=max_pc,
+            prominence=0.0,
+            qualityfactor=0.0,
+        )
+
     
     
     # Calculate metrics
@@ -92,11 +109,18 @@ def calculate_q_factor(energy, photocurrent, peak_idx):
             left_ip = results[2][0]          # Left interpolation point (sub-sample)
             right_ip = results[3][0]         # Right interpolation point (sub-sample)
             
-            # --- VALIDATE INTERPOLATION RESULTS ---
+            left_energy = np.interp(left_ip, np.arange(n_points), energy)
+            right_energy = np.interp(right_ip, np.arange(n_points), energy)
             
-            # Check for zero/invalid width
-            if width_index <= 0.5:
-                print(f"  ❌ peak_widths found zero width ({width_index:.3f} samples)")
+            fwhm = abs(right_energy - left_energy)
+
+            if width_index < 2:
+                print("Width too narrow in samples:", width_index)
+                return 0.0
+            
+            energy_step = np.median(np.diff(energy))
+            if fwhm < 2 * energy_step:
+                print(f"FWHM too small: {fwhm:.4e} eV, step {energy_step:.4e} eV")
                 return 0.0
             
             # Check interpolation points are in valid range
@@ -104,22 +128,16 @@ def calculate_q_factor(energy, photocurrent, peak_idx):
                 print(f"  ❌ Interpolation point out of bounds: L={left_ip:.1f}, R={right_ip:.1f}")
                 return 0.0
             
-            # --- Convert to energy units ---
-            # Use np.interp for accurate sub-sample interpolation
-            left_energy = np.interp(left_ip, np.arange(n_points), energy)
-            right_energy = np.interp(right_ip, np.arange(n_points), energy)
-            
-            fwhm = right_energy - left_energy
-            
+
             # --- FINAL VALIDATION ---
             if fwhm <= 0:
-                print(f"  ❌ NEGATIVE FWHM: {fwhm:.6f} eV")
+                print(f"  ❌ ZERO/NEGATIVE FWHM: {fwhm:.6f} eV")
                 print(f"      Left={left_energy:.3f} eV, Right={right_energy:.3f} eV")
                 print(f"      This is a numerical artifact - returning 0.0")
                 return 0.0
             
             # Sanity: FWHM should be less than 30% of spectrum range
-            total_range = energy[-1] - energy[0]
+            total_range = abs(energy[-1] - energy[0])
             if fwhm > total_range * 0.3:
                 print(f"  ❌ FWHM ({fwhm:.3f} eV) > 30% of spectrum range")
                 return 0.0
