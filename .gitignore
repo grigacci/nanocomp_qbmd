@@ -9,3 +9,6 @@
 /results
 /__pycache__
 .envrc
+/env
+/venv
+/myenv
