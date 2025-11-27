@@ -131,3 +131,10 @@ linux_executable/temp_files/
 
 # data
 *.csv
+
+# Optimization output directories
+linux_executable/manual_runs/
+linux_executable/GA_runs/
+
+# do not exclude important csv outputs
+!linux_executable/optimization_results/pareto_*
