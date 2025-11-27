@@ -25,6 +25,7 @@ population_size = 20
 num_generations = 25
 crossover_prob = 0.9
 mutation_prob = 0.1
+save_frequency = 1  # Save intermediate results every X simulations (0 to disable)
 
 # Limites das variáveis (ajuste conforme seu problema)
 [optimization.bounds]

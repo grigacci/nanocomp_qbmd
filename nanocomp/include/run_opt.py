@@ -3,12 +3,13 @@ Otimização multi-objetivo de detectores QBMD usando NSGA-II.
 """
 
 import numpy as np
-import subprocess
+import pandas as pd
 import os
 from pathlib import Path
 from datetime import datetime
 
 from pymoo.core.problem import Problem
+from pymoo.core.sampling import Sampling
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.optimize import minimize
 from pymoo.operators.crossover.sbx import SBX
@@ -17,12 +18,96 @@ from pymoo.operators.sampling.rnd import FloatRandomSampling
 from pymoo.termination import get_termination
 
 from .config import loadConfig
-from .extract import getSimulationResult
+from .run_prog import run_qbmd, _default_result
 from .models import SimulationResult
 
 # Get the repository root directory
 _SCRIPT_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _SCRIPT_DIR.parents[1]
+
+# Parameter column names in CSV files
+PARAM_COLS = ["RW", "RQWt", "RQBt", "MQWt", "LW", "LQWt", "LQBt"]
+
+
+class InitialPopulationSampling(Sampling):
+    """
+    Custom sampling that initializes from a CSV file with previous results.
+    If the CSV has fewer individuals than pop_size, fills remaining with random sampling.
+    """
+    
+    def __init__(self, initial_pop, bounds):
+        """
+        Parameters
+        ----------
+        initial_pop : np.ndarray
+            Initial population array of shape (n_individuals, n_vars)
+        bounds : dict
+            Bounds dictionary with 'lower' and 'upper' lists
+        """
+        super().__init__()
+        self.initial_pop = initial_pop
+        self.bounds = bounds
+    
+    def _do(self, problem, n_samples, **kwargs):
+        n_initial = len(self.initial_pop)
+        n_vars = problem.n_var
+        
+        # Start with initial population
+        X = np.zeros((n_samples, n_vars))
+        
+        if n_initial >= n_samples:
+            # Use first n_samples from initial population
+            X = self.initial_pop[:n_samples].copy()
+        else:
+            # Use all initial population and fill rest randomly
+            X[:n_initial] = self.initial_pop.copy()
+            
+            # Random sampling for remaining individuals
+            xl = np.array(self.bounds['lower'])
+            xu = np.array(self.bounds['upper'])
+            
+            for i in range(n_initial, n_samples):
+                X[i] = xl + np.random.random(n_vars) * (xu - xl)
+        
+        return X
+
+
+def load_initial_population(csv_path, param_cols=None):
+    """
+    Load initial population from a CSV file.
+    
+    Parameters
+    ----------
+    csv_path : str or Path
+        Path to CSV file with previous optimization results
+    param_cols : list, optional
+        List of parameter column names. Defaults to PARAM_COLS.
+        
+    Returns
+    -------
+    np.ndarray
+        Array of shape (n_individuals, 7) with parameter values
+    """
+    if param_cols is None:
+        param_cols = PARAM_COLS
+    
+    csv_path = Path(csv_path)
+    if not csv_path.exists():
+        raise FileNotFoundError(f"Initial population file not found: {csv_path}")
+    
+    df = pd.read_csv(csv_path)
+    
+    # Check that all required columns exist
+    missing_cols = [col for col in param_cols if col not in df.columns]
+    if missing_cols:
+        raise ValueError(f"CSV missing required parameter columns: {missing_cols}")
+    
+    # Extract parameter values
+    pop = df[param_cols].values
+    
+    print(f"!WARMED UP! Loaded {len(pop)} individuals from {csv_path.name}")
+    
+    return pop
 
 
 class QBMDOptimizationProblem(Problem):
@@ -45,7 +130,7 @@ class QBMDOptimizationProblem(Problem):
     4. Proeminência do pico
     """
     
-    def __init__(self, config, bounds, repo_root=None):
+    def __init__(self, config, bounds, repo_root=None, save_frequency=5):
         """
         Parâmetros
         ----------
@@ -56,32 +141,30 @@ class QBMDOptimizationProblem(Problem):
             Formato: {'lower': [x1_min, x2_min, ...], 'upper': [x1_max, x2_max, ...]}
         repo_root : Path, optional
             Root directory of the repository (for finding executable)
+        save_frequency : int, optional
+            Save intermediate results every X simulations (0 to disable)
         """
         self.config = config
         self.simulation_counter = 0
         self.repo_root = Path(repo_root) if repo_root else _REPO_ROOT
+        self.save_frequency = save_frequency
         
-        # Output directory - use absolute path relative to repo root
-        output_dir_str = config["paths"]["output_dir"]
-        if not os.path.isabs(output_dir_str):
-            self.base_output_dir = (self.repo_root / "nanocomp" / output_dir_str).resolve()
-        else:
-            self.base_output_dir = Path(output_dir_str)
-        self.base_output_dir.mkdir(parents=True, exist_ok=True)
+        # Track all evaluated individuals and their objectives
+        self.all_parameters = []
+        self.all_objectives = []
         
-        # Resolve executable path
-        exec_path = config["simulator"]["exec_path"]
-        if not os.path.isabs(exec_path):
-            self.exec_path = (self.repo_root / exec_path).resolve()
-        else:
-            self.exec_path = Path(exec_path)
+        # Output directory for GA runs
+        self.out_root = (self.repo_root / "linux_executable").resolve()
         
-        if not self.exec_path.exists():
-            raise FileNotFoundError(f"Executable not found: {self.exec_path}")
+        # Output directory for intermediate results
+        self.results_dir = self.repo_root / "linux_executable" / "optimization_results"
+        self.results_dir.mkdir(parents=True, exist_ok=True)
         
-        # Ensure executable permissions
-        if not os.access(self.exec_path, os.X_OK):
-            os.chmod(self.exec_path, 0o755)
+        # Peak detection threshold from config
+        self.peak_threshold = config["analysis"]["peak_threshold"]
+        
+        # Simulation timeout from config
+        self.timeout = config["simulator"]["timeout"]
         
         # Definir limites das variáveis
         xl = np.array(bounds['lower'])
@@ -95,6 +178,27 @@ class QBMDOptimizationProblem(Problem):
             xl=xl,
             xu=xu
         )
+    
+    def _save_intermediate_results(self):
+        """Save current best individuals to CSV."""
+        if len(self.all_parameters) == 0:
+            return
+            
+        # Stack all data
+        params = np.array(self.all_parameters)
+        objectives = np.array(self.all_objectives)
+        combined = np.hstack([params, objectives])
+        
+        # Save to file named by simulation count
+        filename = self.results_dir / f"intermediate_sim_{self.simulation_counter:05d}.csv"
+        np.savetxt(
+            filename,
+            combined,
+            delimiter=",",
+            header="RW,RQWt,RQBt,MQWt,LW,LQWt,LQBt,max_energy_eV,max_photocurrent,quality_factor,prominence",
+            comments=""
+        )
+        print(f"Resultados intermediários salvos: {filename.name}\n")
     
     def _evaluate(self, X, out, *args, **kwargs):
         """
@@ -110,20 +214,47 @@ class QBMDOptimizationProblem(Problem):
         F = []  # Matriz de objetivos
         
         for idx, individual in enumerate(X):
-            # Executar simulação
-            result = self._run_simulation(individual)
+            # Executar simulação usando run_qbmd
+            self.simulation_counter += 1
+            
+            try:
+                # Call run_qbmd with return_results=True to get SimulationResult
+                out_dir, result = run_qbmd(
+                    RW=int(individual[0]),
+                    RQWt=individual[1],
+                    RQBt=individual[2],
+                    MQWt=individual[3],
+                    LW=int(individual[4]),
+                    LQWt=individual[5],
+                    LQBt=individual[6],
+                    thickness_units="nm",
+                    create_param_folder=True,
+                    out_root=str(self.out_root),
+                    timeout=self.timeout,
+                    return_results=True,
+                    peak_threshold=self.peak_threshold,
+                    simulation_id=self.simulation_counter,
+                )
+            except Exception as e:
+                print(f"  Erro ao executar simulação {self.simulation_counter}: {e}")
+                result = _default_result()
+            
+            # Store raw objectives (positive values for storage)
+            raw_objectives = [
+                result.max_energy,
+                result.max_photocurrent,
+                result.quality_factor,
+                result.prominence
+            ]
             
             # NSGA-II minimiza, então negamos para maximizar
-            objectives = [
-                -result.max_energy,          # Maximizar energia do pico
-                -result.max_photocurrent,    # Maximizar intensidade
-                -result.quality_factor,      # Maximizar fator de qualidade
-                -result.prominence           # Maximizar proeminência
-            ]
+            objectives = [-obj for obj in raw_objectives]
             
             F.append(objectives)
             
-            self.simulation_counter += 1
+            # Store for intermediate saving
+            self.all_parameters.append(individual.copy())
+            self.all_objectives.append(raw_objectives)
             
             # Log de progresso
             if self.simulation_counter % 5 == 0:
@@ -133,91 +264,15 @@ class QBMDOptimizationProblem(Problem):
                 print(f"  Intensidade: {result.max_photocurrent:.6e}")
                 print(f"  Q: {result.quality_factor:.2f}")
                 print(f"  Proeminência: {result.prominence:.4f}")
+            
+            # Save intermediate results at specified frequency
+            if self.save_frequency > 0 and self.simulation_counter % self.save_frequency == 0:
+                self._save_intermediate_results()
         
         out["F"] = np.array(F)
-    
-    def _run_simulation(self, parameters):
-        """
-        Executa o simulador QBMD com os parâmetros fornecidos.
-        
-        Parâmetros
-        ----------
-        parameters : array [ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7]
-        
-        Retorna
-        -------
-        SimulationResult
-        """
-        # Converter parâmetros para formato correto
-        arg1 = int(parameters[0])  # Inteiro
-        arg2 = f"{parameters[1]:.1f}d0"  # Formato Fortran
-        arg3 = f"{parameters[2]:.1f}d0"
-        arg4 = f"{parameters[3]:.1f}d0"
-        arg5 = int(parameters[4])  # Inteiro
-        arg6 = f"{parameters[5]:.1f}d0"
-        arg7 = f"{parameters[6]:.1f}d0"
-
-        simulation_path = f"{arg1:02d}x{arg2}_{arg3}_{arg4}_{arg5:02d}x{arg6}_{arg7}"
-
-        # Diretório de saída específico para esta simulação
-        output_dir = self.base_output_dir / f"sim_{self.simulation_counter:05d}" / simulation_path
-        output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Build command arguments with trailing slash for output directory
-        args = [
-            str(self.exec_path),
-            str(arg1), arg2, arg3, arg4,
-            str(arg5), arg6, arg7,
-            str(output_dir) + "/"
-        ]
-        
-        print(f"\n Iniciando simulação {self.simulation_counter} com parâmetros: {args}")
-
-        try:
-            result = subprocess.run(
-                args,
-                capture_output=True,
-                text=True,
-                timeout=self.config["simulator"]["timeout"]
-            )
-            
-            if result.returncode != 0:
-                print(f" Erro no simulador (sim {self.simulation_counter}):")
-                print(result.stderr)
-                return self._default_result()
-            
-            # Extrair métricas do resultado
-            photocurrent_file = output_dir / self.config["paths"]["photocurrent"] 
-            
-            if not photocurrent_file.exists():
-                print(f"  Arquivo não encontrado: {photocurrent_file}")
-                return self._default_result()
-            
-            simulation_result = getSimulationResult(
-                str(photocurrent_file),
-                self.config["analysis"]["peak_threshold"]
-            )
-            
-            return simulation_result
-            
-        except subprocess.TimeoutExpired:
-            print(f"  Timeout na simulação {self.simulation_counter}")
-            return self._default_result()
-        except Exception as e:
-            print(f"  Erro ao executar simulação {self.simulation_counter}: {e}")
-            return self._default_result()
-    
-    def _default_result(self):
-        """Retorna resultado padrão para simulações falhas"""
-        return SimulationResult(
-            max_energy=0.0,
-            max_photocurrent=0.0,
-            prominence=0.0,
-            quality_factor=0.0
-        )
 
 
-def run_optimization(config_path=None, repo_root=None):
+def run_optimization(config_path=None, repo_root=None, initial_population_csv=None):
     """Executa a otimização multi-objetivo com NSGA-II
     
     Parameters
@@ -226,7 +281,18 @@ def run_optimization(config_path=None, repo_root=None):
         Path to config.toml file. If None, uses default in include directory.
     repo_root : str or Path, optional
         Repository root directory. If None, auto-detected.
+    initial_population_csv : str or Path, optional
+        Path to CSV file with initial population from previous GA runs.
+        The CSV should have columns: RW, RQWt, RQBt, MQWt, LW, LQWt, LQBt.
+        If provided, the GA will be warm-started with these individuals.
     """
+    
+    # Auto-detect if config_path is actually a CSV file (common mistake)
+    # This happens when user calls run_optimization(csv_file) without keyword
+    if config_path is not None and str(config_path).endswith('.csv'):
+        # User likely meant to pass initial_population_csv
+        initial_population_csv = config_path
+        config_path = None
     
     # Resolve paths
     if repo_root is None:
@@ -239,36 +305,55 @@ def run_optimization(config_path=None, repo_root=None):
         config_path = _SCRIPT_DIR / "config.toml"
     config = loadConfig(str(config_path))
     
-    # Definir limites das variáveis
-    # AJUSTE ESTES VALORES DE ACORDO COM SEU PROBLEMA!
+    # Carregar limites das variáveis do arquivo de configuração
+    bounds_config = config["optimization"]["bounds"]
     bounds = {
         'lower': [
-            1,      # ARG1: mínimo 1 período
-            1.0,    # ARG2: mínimo valor do parâmetro
-            5.0,    # ARG3: mínimo valor do parâmetro
-            1.0,    # ARG4: mínimo espessura
-            1,      # ARG5: mínimo 1 período
-            1.0,    # ARG6: mínimo valor do parâmetro
-            3.0     # ARG7: mínimo valor do parâmetro
+            bounds_config["arg1_min"],  # ARG1: mínimo períodos
+            bounds_config["arg2_min"],  # ARG2: mínimo valor do parâmetro
+            bounds_config["arg3_min"],  # ARG3: mínimo valor do parâmetro
+            bounds_config["arg4_min"],  # ARG4: mínimo espessura
+            bounds_config["arg5_min"],  # ARG5: mínimo períodos
+            bounds_config["arg6_min"],  # ARG6: mínimo valor do parâmetro
+            bounds_config["arg7_min"]   # ARG7: mínimo valor do parâmetro
         ],
         'upper': [
-            10,     # ARG1: máximo 10 períodos
-            5.0,    # ARG2: máximo valor do parâmetro
-            10.0,   # ARG3: máximo valor do parâmetro
-            5.0,    # ARG4: máximo espessura
-            10,     # ARG5: máximo 10 períodos
-            5.0,    # ARG6: máximo valor do parâmetro
-            10.0    # ARG7: máximo valor do parâmetro
+            bounds_config["arg1_max"],  # ARG1: máximo períodos
+            bounds_config["arg2_max"],  # ARG2: máximo valor do parâmetro
+            bounds_config["arg3_max"],  # ARG3: máximo valor do parâmetro
+            bounds_config["arg4_max"],  # ARG4: máximo espessura
+            bounds_config["arg5_max"],  # ARG5: máximo períodos
+            bounds_config["arg6_max"],  # ARG6: máximo valor do parâmetro
+            bounds_config["arg7_max"]   # ARG7: máximo valor do parâmetro
         ]
     }
     
+    # Get save frequency from config (default to 5 if not specified)
+    save_frequency = config["optimization"].get("save_frequency", 5)
+    
     # Criar problema de otimização
-    problem = QBMDOptimizationProblem(config=config, bounds=bounds, repo_root=repo_root)
+    problem = QBMDOptimizationProblem(
+        config=config, 
+        bounds=bounds, 
+        repo_root=repo_root,
+        save_frequency=save_frequency
+    )
+    
+    # Determine sampling strategy
+    if initial_population_csv is not None:
+        # Load initial population from CSV for warm start
+        initial_pop = load_initial_population(initial_population_csv)
+        sampling = InitialPopulationSampling(initial_pop, bounds)
+        warm_start = True
+    else:
+        # Random sampling
+        sampling = FloatRandomSampling()
+        warm_start = False
     
     # Configurar NSGA-II
     algorithm = NSGA2(
         pop_size=config["optimization"]["population_size"],
-        sampling=FloatRandomSampling(),
+        sampling=sampling,
         crossover=SBX(prob=config["optimization"]["crossover_prob"], eta=15),
         mutation=PM(eta=20),
         eliminate_duplicates=True
@@ -284,6 +369,11 @@ def run_optimization(config_path=None, repo_root=None):
     print(f"População: {config['optimization']['population_size']}")
     print(f"Gerações: {config['optimization']['num_generations']}")
     print(f"Total de simulações: {config['optimization']['population_size'] * config['optimization']['num_generations']}")
+    if warm_start:
+        print(f"*População Base: Inicializando com população custumizada")
+    if save_frequency > 0:
+        print(f"Salvando resultados a cada: {save_frequency} simulações")
+        print(f"Diretório: nanocomp/simulation_results/")
     print("="*70)
     
     res = minimize(
@@ -306,12 +396,6 @@ def run_optimization(config_path=None, repo_root=None):
     
     # Salvar resultados
     save_results(res, pareto_objectives, config)
-    
-    # Mostrar melhores soluções
-    display_best_solutions(res.X, pareto_objectives)
-    
-    # Visualizar Frente de Pareto
-    visualize_pareto_front(pareto_objectives)
     
     return res
 
@@ -362,84 +446,6 @@ def save_results(res, pareto_objectives, config, output_base_dir=None):
     print(f"   - Parâmetros: {params_file.name}")
     print(f"   - Objetivos: {objectives_file.name}")
     print(f"   - Completo: {combined_file.name}")
-
-
-def display_best_solutions(parameters, objectives):
-    """Mostra as melhores soluções por cada objetivo"""
-    
-    print("\n" + "="*70)
-    print("MELHORES SOLUÇÕES POR OBJETIVO")
-    print("="*70)
-    
-    objective_names = [
-        "Energia do Pico (eV)",
-        "Intensidade da Fotocorrente",
-        "Fator de Qualidade",
-        "Proeminência"
-    ]
-    
-    for i, name in enumerate(objective_names):
-        best_idx = np.argmax(objectives[:, i])
-        
-        print(f"\n🏆 Melhor {name}:")
-        print(f"   Valor: {objectives[best_idx, i]:.6f}")
-        print(f"   Parâmetros: {parameters[best_idx]}")
-        print(f"   Outros objetivos:")
-        for j, obj_name in enumerate(objective_names):
-            if j != i:
-                print(f"     - {obj_name}: {objectives[best_idx, j]:.6f}")
-
-
-def visualize_pareto_front(objectives, output_dir=None):
-    """Visualiza projeções 2D da Frente de Pareto"""
-    import matplotlib.pyplot as plt
-    
-    labels = [
-        "Energia do Pico (eV)",
-        "Intensidade",
-        "Fator de Qualidade",
-        "Proeminência"
-    ]
-    
-    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-    axes = axes.flatten()
-    
-    # Todas as combinações de pares
-    pairs = [
-        (0, 1), (0, 2), (0, 3),
-        (1, 2), (1, 3), (2, 3)
-    ]
-    
-    for idx, (i, j) in enumerate(pairs):
-        axes[idx].scatter(
-            objectives[:, i], 
-            objectives[:, j], 
-            c='red', 
-            alpha=0.6,
-            s=50,
-            edgecolors='black',
-            linewidth=0.5
-        )
-        axes[idx].set_xlabel(labels[i], fontsize=11, fontweight='bold')
-        axes[idx].set_ylabel(labels[j], fontsize=11, fontweight='bold')
-        axes[idx].grid(True, alpha=0.3)
-        axes[idx].set_title(f"{labels[i]} vs {labels[j]}", fontsize=10)
-    
-    plt.tight_layout()
-    
-    if output_dir is None:
-        output_dir = _REPO_ROOT / "nanocomp" / "pareto_plots"
-    else:
-        output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    
-    output_file = output_dir / 'pareto_front_projections.png'
-    plt.savefig(output_file, dpi=300, bbox_inches='tight')
-    print(f"\n📊 Visualização da Frente de Pareto salva: {output_file}")
-    
-    plt.close()
-    
-    return output_file
 
 
 if __name__ == "__main__":

@@ -1,15 +1,25 @@
 """Run the Fortran QBMD program with convenient helpers.
-Example:
+Example (basic - returns only output directory):
     out_dir = run_qbmd(5, 2e-9, 7e-9, 2e-9, 1, 2e-9, 7e-9,
                        thickness_units="m", create_param_folder=True)
     print("Outputs in:", out_dir)
+
+Example (with results - returns tuple of output directory and SimulationResult):
+    out_dir, result = run_qbmd(5, 2e-9, 7e-9, 2e-9, 1, 2e-9, 7e-9,
+                       thickness_units="m", create_param_folder=True,
+                       return_results=True)
+    print("Outputs in:", out_dir)
+    print("Simulation result:", result)
 """
 
 import subprocess
 import os
 import shutil
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Tuple, Union
+
+from .extract import getSimulationResult
+from .models import SimulationResult
 
 
 # -----------------------
@@ -112,7 +122,10 @@ def run_qbmd(
     create_param_folder: bool = True,
     out_root: Optional[str] = None,
     timeout: int = 120,
-) -> str:
+    return_results: bool = False,
+    peak_threshold: float = 0.1,
+    simulation_id: Optional[int] = None,
+) -> Union[str, Tuple[str, SimulationResult]]:
     """Run the QBMD Fortran program with the provided parameters.
 
     Parameters
@@ -123,9 +136,13 @@ def run_qbmd(
                            if False, reuse a stable folder (for GA runs) under fortran_files/GA_tmp
     - out_root: optional override for the root output directory. Defaults to linux_executable/fortran_files
     - timeout: seconds to wait for the executable
+    - return_results: if True, also extract and return SimulationResult from photocurrent file
+    - peak_threshold: threshold for peak detection (used when return_results=True)
+    - simulation_id: optional simulation identifier for GA runs (used for folder naming)
 
     Returns
-    - Absolute path to the output folder used (string)
+    - If return_results=False: Absolute path to the output folder used (string)
+    - If return_results=True: Tuple of (output_folder_path, SimulationResult)
     """
     # Resolve root dirs
     repo_root = Path(__file__).resolve().parents[2]  # .../nano.compQBMD
@@ -145,7 +162,11 @@ def run_qbmd(
     # Determine output folder
     if create_param_folder:
         slug = _build_param_slug(RW, RQWt_nm, RQBt_nm, MQWt_nm, LW, LQWt_nm, LQBt_nm)
-        out_dir = (fortran_root / "manual_runs" / slug).resolve()
+        if simulation_id is not None:
+            # For GA runs, include simulation ID in path
+            out_dir = (fortran_root / "GA_runs" / f"sim_{simulation_id:05d}" / slug).resolve()
+        else:
+            out_dir = (fortran_root / "manual_runs" / slug).resolve()
     else:
         out_dir = (fortran_root / "temp_files").resolve()
 
@@ -173,10 +194,41 @@ def run_qbmd(
         except Exception:
             # Don't mask original exception; just attempt best-effort cleanup.
             pass
+        
+        if return_results:
+            # Return default result for failed simulations
+            return str(out_dir), _default_result()
         raise
 
-    # Return absolute output folder path
+    # Return results based on return_results flag
+    if return_results:
+        # Extract simulation results from photocurrent file
+        photocurrent_file = Path(used_out) / "Photocurrent_SL.txt"
+        if photocurrent_file.exists():
+            try:
+                simulation_result = getSimulationResult(
+                    str(photocurrent_file),
+                    peak_threshold
+                )
+            except Exception as e:
+                print(f"  Error extracting results: {e}")
+                simulation_result = _default_result()
+        else:
+            print(f"  Photocurrent file not found: {photocurrent_file}")
+            simulation_result = _default_result()
+        return used_out, simulation_result
+    
     return used_out
+
+
+def _default_result() -> SimulationResult:
+    """Return default SimulationResult for failed simulations"""
+    return SimulationResult(
+        max_energy=0.0,
+        max_photocurrent=0.0,
+        prominence=0.0,
+        quality_factor=0.0
+    )
 
 
 __all__ = ["run_qbmd"]

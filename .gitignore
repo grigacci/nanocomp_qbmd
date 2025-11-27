@@ -135,6 +135,7 @@ linux_executable/temp_files/
 # Optimization output directories
 linux_executable/manual_runs/
 linux_executable/GA_runs/
+nanocomp/simulation_results/
 
 # do not exclude important csv outputs
 !linux_executable/optimization_results/pareto_*

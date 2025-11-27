@@ -2,6 +2,12 @@ import numpy as np
 import os
 from .models import SimulationResult
 
+# NumPy compatibility: trapezoid was renamed from trapz in NumPy 2.0
+try:
+    _trapezoid = np.trapezoid
+except AttributeError:
+    _trapezoid = np.trapz
+
 def getSimulationResult(photocurrent_file, peak_detection_threshold=0.05):
     max_energy, max_photocurrent = getMaxPhotocurrent(photocurrent_file)
     promience = getGetProminenceMetric(photocurrent_file, max_photocurrent, peak_detection_threshold)
@@ -58,9 +64,9 @@ def getGetProminenceMetric(photocurrent_file, peak_value, peak_detection_thresho
 
     above_threshold =  photocurrent >= threshold_value
 
-    peak_energy_integral = np.trapezoid(photocurrent[above_threshold], energy[above_threshold])
+    peak_energy_integral = _trapezoid(photocurrent[above_threshold], energy[above_threshold])
 
-    total_energy_integral = np.trapezoid(np.abs(photocurrent), energy)
+    total_energy_integral = _trapezoid(np.abs(photocurrent), energy)
 
     # Calculate average photocurrent below threshold
     prominence = peak_energy_integral / total_energy_integral if total_energy_integral != 0 else 0
