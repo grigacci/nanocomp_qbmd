@@ -129,7 +129,7 @@ def run_qbmd(
     """
     # Resolve root dirs
     repo_root = Path(__file__).resolve().parents[2]  # .../nano.compQBMD
-    default_fortran_root = (repo_root / "linux_executable" / "fortran_files").resolve()
+    default_fortran_root = (repo_root / "linux_executable").resolve()
     fortran_root = Path(out_root).resolve() if out_root else default_fortran_root
 
     # Convert thicknesses to nm if needed
@@ -145,9 +145,9 @@ def run_qbmd(
     # Determine output folder
     if create_param_folder:
         slug = _build_param_slug(RW, RQWt_nm, RQBt_nm, MQWt_nm, LW, LQWt_nm, LQBt_nm)
-        out_dir = (fortran_root / slug).resolve()
+        out_dir = (fortran_root / "manual_runs" / slug).resolve()
     else:
-        out_dir = (fortran_root / "GA_tmp").resolve()
+        out_dir = (fortran_root / "temp_files").resolve()
 
     preexisting = out_dir.exists()
     # Ensure folder exists for the executable; underlying run_fortran_sim may also create it

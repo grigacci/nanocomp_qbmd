@@ -4,6 +4,7 @@ Otimização multi-objetivo de detectores QBMD usando NSGA-II.
 
 import numpy as np
 import subprocess
+import os
 from pathlib import Path
 from datetime import datetime
 
@@ -18,6 +19,10 @@ from pymoo.termination import get_termination
 from .config import loadConfig
 from .extract import getSimulationResult
 from .models import SimulationResult
+
+# Get the repository root directory
+_SCRIPT_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = _SCRIPT_DIR.parents[1]
 
 
 class QBMDOptimizationProblem(Problem):
@@ -40,7 +45,7 @@ class QBMDOptimizationProblem(Problem):
     4. Proeminência do pico
     """
     
-    def __init__(self, config, bounds):
+    def __init__(self, config, bounds, repo_root=None):
         """
         Parâmetros
         ----------
@@ -49,11 +54,34 @@ class QBMDOptimizationProblem(Problem):
         bounds : dict
             Limites inferior e superior para cada variável
             Formato: {'lower': [x1_min, x2_min, ...], 'upper': [x1_max, x2_max, ...]}
+        repo_root : Path, optional
+            Root directory of the repository (for finding executable)
         """
         self.config = config
         self.simulation_counter = 0
-        self.base_output_dir = Path(config["paths"]["output_dir"])
-        self.base_output_dir.mkdir(exist_ok=True)
+        self.repo_root = Path(repo_root) if repo_root else _REPO_ROOT
+        
+        # Output directory - use absolute path relative to repo root
+        output_dir_str = config["paths"]["output_dir"]
+        if not os.path.isabs(output_dir_str):
+            self.base_output_dir = (self.repo_root / "nanocomp" / output_dir_str).resolve()
+        else:
+            self.base_output_dir = Path(output_dir_str)
+        self.base_output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Resolve executable path
+        exec_path = config["simulator"]["exec_path"]
+        if not os.path.isabs(exec_path):
+            self.exec_path = (self.repo_root / exec_path).resolve()
+        else:
+            self.exec_path = Path(exec_path)
+        
+        if not self.exec_path.exists():
+            raise FileNotFoundError(f"Executable not found: {self.exec_path}")
+        
+        # Ensure executable permissions
+        if not os.access(self.exec_path, os.X_OK):
+            os.chmod(self.exec_path, 0o755)
         
         # Definir limites das variáveis
         xl = np.array(bounds['lower'])
@@ -135,16 +163,13 @@ class QBMDOptimizationProblem(Problem):
         output_dir = self.base_output_dir / f"sim_{self.simulation_counter:05d}" / simulation_path
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        
-        # Executar script run.sh
-        script_path = self.config["simulator"]["exec_path"]
-        
+        # Build command arguments with trailing slash for output directory
         args = [
-                    str(script_path),
-                    str(arg1), arg2, arg3, arg4,
-                    str(arg5), arg6, arg7,
-                    str(output_dir)
-                ]
+            str(self.exec_path),
+            str(arg1), arg2, arg3, arg4,
+            str(arg5), arg6, arg7,
+            str(output_dir) + "/"
+        ]
         
         print(f"\n Iniciando simulação {self.simulation_counter} com parâmetros: {args}")
 
@@ -184,7 +209,6 @@ class QBMDOptimizationProblem(Problem):
     
     def _default_result(self):
         """Retorna resultado padrão para simulações falhas"""
-        from models import SimulationResult
         return SimulationResult(
             max_energy=0.0,
             max_photocurrent=0.0,
@@ -193,11 +217,27 @@ class QBMDOptimizationProblem(Problem):
         )
 
 
-def run_optimization():
-    """Executa a otimização multi-objetivo com NSGA-II"""
+def run_optimization(config_path=None, repo_root=None):
+    """Executa a otimização multi-objetivo com NSGA-II
+    
+    Parameters
+    ----------
+    config_path : str, optional
+        Path to config.toml file. If None, uses default in include directory.
+    repo_root : str or Path, optional
+        Repository root directory. If None, auto-detected.
+    """
+    
+    # Resolve paths
+    if repo_root is None:
+        repo_root = _REPO_ROOT
+    else:
+        repo_root = Path(repo_root)
     
     # Carregar configuração
-    config = loadConfig("config.toml")
+    if config_path is None:
+        config_path = _SCRIPT_DIR / "config.toml"
+    config = loadConfig(str(config_path))
     
     # Definir limites das variáveis
     # AJUSTE ESTES VALORES DE ACORDO COM SEU PROBLEMA!
@@ -223,7 +263,7 @@ def run_optimization():
     }
     
     # Criar problema de otimização
-    problem = QBMDOptimizationProblem(config=config, bounds=bounds)
+    problem = QBMDOptimizationProblem(config=config, bounds=bounds, repo_root=repo_root)
     
     # Configurar NSGA-II
     algorithm = NSGA2(
@@ -276,11 +316,14 @@ def run_optimization():
     return res
 
 
-def save_results(res, pareto_objectives, config):
+def save_results(res, pareto_objectives, config, output_base_dir=None):
     """Salva os resultados da otimização"""
     
-    output_dir = Path("./optimization_results")
-    output_dir.mkdir(exist_ok=True)
+    if output_base_dir is None:
+        output_dir = _REPO_ROOT / "nanocomp" / "optimization_results"
+    else:
+        output_dir = Path(output_base_dir) / "optimization_results"
+    output_dir.mkdir(parents=True, exist_ok=True)
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
@@ -347,7 +390,7 @@ def display_best_solutions(parameters, objectives):
                 print(f"     - {obj_name}: {objectives[best_idx, j]:.6f}")
 
 
-def visualize_pareto_front(objectives):
+def visualize_pareto_front(objectives, output_dir=None):
     """Visualiza projeções 2D da Frente de Pareto"""
     import matplotlib.pyplot as plt
     
@@ -384,11 +427,19 @@ def visualize_pareto_front(objectives):
     
     plt.tight_layout()
     
-    output_file = 'pareto_front_projections.png'
+    if output_dir is None:
+        output_dir = _REPO_ROOT / "nanocomp" / "pareto_plots"
+    else:
+        output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    output_file = output_dir / 'pareto_front_projections.png'
     plt.savefig(output_file, dpi=300, bbox_inches='tight')
     print(f"\n📊 Visualização da Frente de Pareto salva: {output_file}")
     
     plt.close()
+    
+    return output_file
 
 
 if __name__ == "__main__":

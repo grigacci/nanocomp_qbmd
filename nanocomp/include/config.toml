@@ -9,14 +9,15 @@ potential = "Potencial_SL.txt"
 energy = "Energy_SL.txt"
 
 # Diretório de saída
-output_dir = "./runs/"
+output_dir = "../linux_executable/GA_runs/"
 
 [analysis]
 # Parâmetros de análise
 peak_threshold = 0.1  # 0.5% do máximo para identificar região do pico
 
 [simulator]
-exec_path = "./run.sh"
+# Path relative to repo root or absolute path
+exec_path = "linux_executable/prog"
 timeout = 300
 
 [optimization]
