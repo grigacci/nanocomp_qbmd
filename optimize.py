@@ -1,6 +1,8 @@
 """
 Otimização multi-objetivo de detectores QBMD usando NSGA-II.
 """
+import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
 import subprocess
@@ -14,6 +16,7 @@ from pymoo.operators.crossover.sbx import SBX
 from pymoo.operators.mutation.pm import PM
 from pymoo.operators.sampling.rnd import FloatRandomSampling
 from pymoo.termination import get_termination
+
 
 from config import loadConfig
 from extract import getSimulationResult
@@ -73,57 +76,143 @@ class QBMDOptimizationProblem(Problem):
             xl=xl,
             xu=xu
         )
-    
+
+    def _run_simulation_with_id(self, sim_id, individual):
+        """Run simulation and return result or None on failure."""
+        
+        # Build parameters
+        RW = int(individual[0])
+        RQWt = f"{individual[1]:.1f}d0"
+        RQBt = f"{individual[2]:.1f}d0"
+        MQWt = f"{individual[3]:.1f}d0"
+        LW = int(individual[4])
+        LQWt = f"{individual[5]:.1f}d0"
+        LQBt = f"{individual[6]:.1f}d0"
+        
+        simulation_path = f"{RW:02d}x{RQWt}_{RQBt}_{MQWt}_{LW:02d}x{LQWt}_{LQBt}"
+        output_dir = self.base_output_dir / f"sim_{sim_id:05d}" / simulation_path
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Set environment variables
+        env = os.environ.copy()
+        omp = str(self.config["simulator"].get("omp_threads", 1))
+        env.setdefault("OMP_NUM_THREADS", omp)
+        env.setdefault("OPENBLAS_NUM_THREADS", "1")
+        env.setdefault("MKL_NUM_THREADS", "1")
+        
+        args = [
+            str(self.config["simulator"]["exec_path"]),
+            str(RW), RQWt, RQBt, MQWt,
+            str(LW), LQWt, LQBt,
+            str(output_dir)
+        ]
+        
+        try:
+            # Run simulator
+            result = subprocess.run(
+                args, capture_output=True, text=True,
+                timeout=self.config["simulator"]["timeout"], env=env
+            )
+            
+            # Check return code
+            if result.returncode != 0:
+                print(f"\n❌ sim_{sim_id:05d}: Simulator failed with code {result.returncode}")
+                print(f"   Error: {result.stderr[:200]}")
+                return None, individual
+            
+            # Check output file
+            photocurrent_file = output_dir / self.config["paths"]["photocurrent"]
+            if not photocurrent_file.exists():
+                print(f"\n❌ sim_{sim_id:05d}: Output file missing")
+                return None, individual
+            
+            # Extract metrics (will raise exception if file is empty/corrupt)
+            simr = getSimulationResult(str(photocurrent_file),
+                                    self.config["analysis"]["peak_threshold"])
+            
+            print(f"\n✅ sim_{sim_id:05d}: Success (E={simr.max_energy:.3f} eV, Q={simr.quality_factor:.2f})")
+            return simr, individual
+            
+        except subprocess.TimeoutExpired:
+            print(f"\n❌ sim_{sim_id:05d}: TIMEOUT after {self.config['simulator']['timeout']}s")
+            return None, individual
+        except Exception as e:
+            print(f"\n❌ sim_{sim_id:05d}: {str(e)[:100]}")
+            return None, individual
+
     def _evaluate(self, X, out, *args, **kwargs):
         """
-        Avalia a população de soluções.
-        
-        Parâmetros
-        ----------
-        X : array (pop_size, 7)
-            Matriz com os indivíduos da população
-        out : dict
-            Dicionário para armazenar os objetivos e restrições
+        Evaluate population with guaranteed no crashes.
+        Returns proper penalty values for failures.
         """
-        F = []  # Matriz de objetivos
-        G = []  # Matriz de restrições (ADICIONADO)
         
-        for idx, individual in enumerate(X):
-            # Executar simulação
-            result = self._run_simulation(individual)
-            
-            # NSGA-II minimiza, então negamos para maximizar
-            objectives = [
-                -result.max_energy,          # Maximizar energia do pico
-                -result.max_photocurrent,    # Maximizar intensidade
-                -result.quality_factor,      # Maximizar fator de qualidade
-                -result.prominence           # Maximizar proeminência
-            ]
-            
-            F.append(objectives)
-            
-            RW, RQWt, RQBt, MQWt, LW, LQWt, LQBt = individual
-            
-            # Restrição: MQWt >= min(RQWt, LQWt) + 2*monolayer
-            min_lateral_thickness = min(RQWt, LQWt)
-            constraint_value = min_lateral_thickness - MQWt + 2 * self.monolayer_thickness
-            
-            G.append([constraint_value])  # Deve ser uma lista para cada indivíduo
-            
-            self.simulation_counter += 1
-            
-            # Log de progresso
-            if self.simulation_counter % 5 == 0:
-                print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Simulação {self.simulation_counter}")
-                print(f"  Parâmetros: {individual}")
-                print(f"  Energia: {result.max_energy:.2f} eV")
-                print(f"  Intensidade: {result.max_photocurrent:.6e}")
-                print(f"  Q: {result.quality_factor:.2f}")
-                print(f"  Proeminência: {result.prominence:.4f}")
-                print(f"  Restrição: {constraint_value:.4f} (deve ser ≤ 0)")  # ADICIONADO
+        n = len(X)
+        start_id = self.simulation_counter + 1
         
-        out["F"] = np.array(F)
-        out["G"] = np.array(G)  
+        # Initialize with proper penalty values
+        # For MAXIMIZATION in pymoo, we MINIMIZE negative objectives
+        # Penalty = very small negative values (close to zero = bad)
+        F = np.full((n, 4), 0.0, dtype=float)  # Will set to -1e-6 for failures
+        G = np.full((n, 1), 0.0, dtype=float)  # Constraint: 0 = satisfied
+        
+        # Track failures
+        failed_ids = []
+        
+        # Run simulations
+        max_workers = int(self.config["optimization"].get("n_workers", os.cpu_count()))
+        with ThreadPoolExecutor(max_workers=max_workers) as ex:
+            futures = {ex.submit(self._run_simulation_with_id, start_id + i, X[i]): i 
+                    for i in range(n)}
+            
+            for fut in as_completed(futures):
+                i = futures[fut]
+                sim_id = start_id + i
+                
+                try:
+                    # --- GET RESULT ---
+                    result = fut.result(timeout=60)
+                    
+                    if result is None:
+                        # Simulator or validation failed
+                        failed_ids.append(sim_id)
+                        F[i] = [-1e-6, -1e-6, -1e-6, -1e-6]  # Penalty
+                        G[i] = [1e6]  # Violate constraint
+                        continue
+                    
+                    res, individual = result
+                    
+                    # Check if result is valid
+                    if not hasattr(res, 'max_energy') or res.max_energy > 1000:
+                        failed_ids.append(sim_id)
+                        F[i] = [-1e-6, -1e-6, -1e-6, -1e-6]
+                        G[i] = [1e6]
+                        continue
+                    
+                    # --- SUCCESS: Calculate real objectives ---
+                    # Note: quality_factor now holds sharpness
+                    F[i] = [-res.max_energy, -res.max_photocurrent, 
+                        -res.quality_factor, -res.prominence]
+                    
+                    # Real constraint
+                    RW, RQWt, RQBt, MQWt, LW, LQWt, LQBt = individual
+                    G[i] = [min(RQWt, LQWt) - MQWt + 2 * self.monolayer_thickness]
+                    
+                    print(f"  sim_{sim_id:05d}: OK (E={res.max_energy:.3f}, Q={res.quality_factor:.2f})")
+                    
+                except Exception as e:
+                    print(f"  sim_{sim_id:05d}: EXCEPTION - {e}")
+                    failed_ids.append(sim_id)
+                    F[i] = [-1e-6, -1e-6, -1e-6, -1e-6]
+                    G[i] = [1e6]
+        
+        self.simulation_counter += n
+        
+        # Report
+        if failed_ids:
+            print(f"\n⚠️  {len(failed_ids)}/{n} failed ({len(failed_ids)/n*100:.1f}%)")
+        
+        out["F"] = F
+        out["G"] = G
     
     def _run_simulation(self, parameters):
         """
@@ -285,7 +374,6 @@ def run_optimization():
     pareto_objectives = -res.F
     
     save_results(res, pareto_objectives, config)
-    visualize_pareto_front(pareto_objectives)
     
     return res
 
@@ -293,7 +381,9 @@ def run_optimization():
 def save_results(res, pareto_objectives, config):
     """Salva os resultados da otimização"""
     
-    output_dir = Path("./optimization_results")
+    config_paths = config["paths"]["result_dir"]
+
+    output_dir = Path(config_paths)
     output_dir.mkdir(exist_ok=True)
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -304,7 +394,7 @@ def save_results(res, pareto_objectives, config):
         params_file,
         res.X,
         delimiter=",",
-        header="rw,RQWt,RQBt,MQWt,LW,LQWt,LQBt",
+        header="RW,RQWt,RQBt,MQWt,LW,LQWt,LQBt",
         comments="",
         fmt="%d,%.6f,%.6f,%.6f,%d,%.6f,%.6f"  
     )
@@ -333,10 +423,10 @@ def save_results(res, pareto_objectives, config):
     # Salvar resultados combinados
     if hasattr(res, 'G') and res.G is not None:
         combined = np.hstack([res.X, pareto_objectives, res.G])
-        header_combined = "rw,RQWt,RQBt,MQWt,LW,LQWt,LQBt,max_energy_eV,max_photocurrent,quality_factor,prominence,constraint"
+        header_combined = "RW,RQWt,RQBt,MQWt,LW,LQWt,LQBt,max_energy_eV,max_photocurrent,quality_factor,prominence,constraint"
     else:
         combined = np.hstack([res.X, pareto_objectives])
-        header_combined = "rw,RQWt,RQBt,MQWt,LW,LQWt,LQBt,max_energy_eV,max_photocurrent,quality_factor,prominence"
+        header_combined = "RW,RQWt,RQBt,MQWt,LW,LQWt,LQBt,max_energy_eV,max_photocurrent,quality_factor,prominence"
     
     combined_file = output_dir / f"pareto_full_{timestamp}.csv"
     np.savetxt(
@@ -356,48 +446,6 @@ def save_results(res, pareto_objectives, config):
 
 
 
-def visualize_pareto_front(objectives):
-    """Visualiza projeções 2D da Frente de Pareto"""
-    import matplotlib.pyplot as plt
-    
-    labels = [
-        "Energia do Pico (eV)",
-        "Intensidade",
-        "Fator de Qualidade",
-        "Proeminência"
-    ]
-    
-    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-    axes = axes.flatten()
-    
-    # Todas as combinações de pares
-    pairs = [
-        (0, 1), (0, 2), (0, 3),
-        (1, 2), (1, 3), (2, 3)
-    ]
-    
-    for idx, (i, j) in enumerate(pairs):
-        axes[idx].scatter(
-            objectives[:, i], 
-            objectives[:, j], 
-            c='red', 
-            alpha=0.6,
-            s=50,
-            edgecolors='black',
-            linewidth=0.5
-        )
-        axes[idx].set_xlabel(labels[i], fontsize=11, fontweight='bold')
-        axes[idx].set_ylabel(labels[j], fontsize=11, fontweight='bold')
-        axes[idx].grid(True, alpha=0.3)
-        axes[idx].set_title(f"{labels[i]} vs {labels[j]}", fontsize=10)
-    
-    plt.tight_layout()
-    
-    output_file = 'pareto_front_projections.png'
-    plt.savefig(output_file, dpi=300, bbox_inches='tight')
-    print(f"\n Visualização da Frente de Pareto salva: {output_file}")
-    
-    plt.close()
 
 
 if __name__ == "__main__":

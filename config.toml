@@ -10,35 +10,36 @@ energy = "Energy_SL.txt"
 
 # Diretório de saída
 output_dir = "./runs/"
+result_dir = "./results"
 
 [analysis]
 # Parâmetros de análise
-peak_threshold = 0.1  # 0.5% do máximo para identificar região do pico
+peak_threshold = 0.10
 
 [simulator]
 exec_path = "./run.sh"
 timeout = 300
 
 [optimization]
-population_size = 25
-num_generations = 50
+population_size = 100
+num_generations = 150
 crossover_prob = 0.9
 mutation_prob = 0.1
 monolayer_thickness = 0.293
 
 # Limites das variáveis (ajuste conforme seu problema)
 [optimization.bounds]
-rw_min = 1          #Número de poços à esquerda
-rw_max = 10         #Número de poços à esquerda
-rqwt_min = 1.0      #Espessura dos poços quânticos à esquerda (nm)
-rqwt_max = 15.0     #Espessura dos poços quânticos à esquerda (nm)
-rqbt_min = 1.0      #Espessura das barreiras à esquerda (nm)
-rqbt_max = 15.0     #Espessura das barreiras à esquerda (nm)
-mqwt_min = 1.0      #Espessura do poço quântico principal (nm)
-mqwt_max = 5.0      #Espessura do poço quântico principal (nm)
-lw_min = 1          #Número de poços à direita
-lw_max = 10         #Número de poços à direita
-lqwt_min = 1.0      #Espessura dos poços quânticos à direita (nm)
-lqwt_max = 15.0     #Espessura dos poços quânticos à direita (nm)
-lqbt_min = 1.0      #Espessura das barreiras à direita (nm)
-lqbt_max = 15.0     #Espessura das barreiras à direita (nm)
+rw_min = 1      #Número de poços à esquerda
+rw_max = 10     #Número de poços à esquerda
+rqwt_min = 1.0  #Espessura dos poços quânticos à esquerda (nm)
+rqwt_max = 15.0 #Espessura dos poços quânticos à esquerda (nm)
+rqbt_min = 1.0  #Espessura das barreiras à esquerda (nm)
+rqbt_max = 15.0 #Espessura das barreiras à esquerda (nm)
+mqwt_min = 1.0  #Espessura do poço quântico principal (nm)
+mqwt_max = 5.0  #Espessura do poço quântico principal (nm)
+lw_min = 1      #Número de poços à direita
+lw_max = 10     #Número de poços à direita
+lqwt_min = 1.0  #Espessura dos poços quânticos à direita (nm)
+lqwt_max = 15.0 #Espessura dos poços quânticos à direita (nm)
+lqbt_min = 1.0  #Espessura das barreiras à direita (nm)
+lqbt_max = 15.0 #Espessura das barreiras à direita (nm)
